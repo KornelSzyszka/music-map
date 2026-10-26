@@ -1,0 +1,36 @@
+# Large or derived datasets and media
+data/raw/
+data/processed/
+data/cache/
+*.wav
+*.flac
+*.mp3
+*.tar
+*.parquet
+
+# Runtime and tooling files
+node_modules/
+dist/
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+
+# Music Atlas workspace artifacts
+data/derived/
+frontend/node_modules/
+frontend/dist/
+frontend/.npm-cache/
+frontend/*.tsbuildinfo
+pipeline/.uv-cache/
+pipeline/.uv-tools/
+pipeline/.venv/
+pipeline/.ruff_cache/
+pipeline/.pytest_cache/
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
