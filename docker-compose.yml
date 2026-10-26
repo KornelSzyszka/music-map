@@ -1,0 +1,18 @@
+# Usage: see "Docker" in CONTRIBUTING.md. Compose reads MUSIC_MAP_DATA_DIR from .env.
+services:
+  pipeline:
+    build: ./pipeline
+    environment:
+      MUSIC_MAP_DATA_DIR: /data
+    volumes:
+      - ${MUSIC_MAP_DATA_DIR:?set MUSIC_MAP_DATA_DIR in .env}:/data:ro
+      - ./data/derived:/app/data/derived
+
+  frontend:
+    build:
+      context: ./frontend
+      target: serve
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data/derived:/usr/share/nginx/html/atlas:ro
