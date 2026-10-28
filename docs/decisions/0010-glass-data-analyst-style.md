@@ -15,6 +15,13 @@ ADR 0008 chose a flat neutral style and rejected glass effects. After seeing the
 - The Map tab has three zones: the map on the left; a permanent selected-track panel on the right that keeps its shape (labels with em dashes) when nothing is selected; the legend and an always-visible control bar under the map. The search field and the visible count sit above the map. The Features tab follows the same shape.
 - Details are in `docs/design.md`, which this decision supersedes where it differs from ADR 0008 (glass, panel radius, layout of the side panel).
 
+## Update, same day
+
+- The control bar was reorganised into a Colour section and a Filters section with one aligned row per filter.
+- Dropdowns and typeahead lists are custom components in the same glass style; the browser's native select and datalist are no longer used.
+- Every control uses the monospace face at 12 px (a measurement showed that buttons, tabs, inputs and dropdown triggers had fallen back to the default system sans); content text stays in the sans face.
+- The page gets an ambient background: a solid colour with three soft tints drifting slowly behind the glass, at rest under `prefers-reduced-motion`. This is the user's request and the only decorative motion.
+
 ## Alternatives and rationale
 
 - Keep the flat style: rejected by the user's choice.

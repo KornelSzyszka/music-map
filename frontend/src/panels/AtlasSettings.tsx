@@ -1,27 +1,43 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import type { ColourMode } from '../derive/colouring'
 import { EMPTY_FILTERS, hasActiveFilters, setRangeBound, type ClusterScope, type Filters, type TagMatch } from '../derive/filters'
 import { featureExtent, featureLabel } from '../derive/options'
+import type { PickerOption } from '../derive/pickers'
 import type { AtlasStore } from '../state/store'
 import { useAtlasStore } from '../state/useAtlasStore'
 import ChipInput from './ChipInput'
+import Dropdown from './Dropdown'
 import NumberField from './NumberField'
 
-const COLOUR_MODES: ReadonlyArray<{ value: ColourMode; label: string }> = [
-  { value: 'none', label: 'None' },
-  { value: 'cluster', label: 'Cluster' },
-  { value: 'feature', label: 'Feature' },
-  { value: 'artist', label: 'Artist' },
+const TAG_MATCHES: readonly PickerOption[] = [
+  { value: 'all', label: 'All of' },
+  { value: 'any', label: 'Any of' },
+]
+const CLUSTER_SCOPES: readonly PickerOption[] = [
+  { value: 'all', label: 'All' },
+  { value: 'clustered', label: 'Clustered' },
+  { value: 'unclustered', label: 'Unclustered' },
 ]
 
 function isColourMode(value: string): value is ColourMode {
-  return COLOUR_MODES.some((mode) => mode.value === value)
+  return value === 'none' || value === 'cluster' || value === 'feature' || value === 'artist'
 }
 
+function FilterRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="filter-row">
+      <span className="setting-label">{label}</span>
+      <div className="row-controls">{children}</div>
+    </div>
+  )
+}
+
+/** Two aligned sections: how the map is coloured, and the filters that decide which tracks are shown. */
 export default function AtlasSettings({ store }: { store: AtlasStore }) {
   const { atlas, filters, colourMode, colourFeature, derived } = useAtlasStore(store)
   const tracks = atlas?.tracks
   const tagOptions = useMemo(() => derived.tags.map((tag) => ({ value: tag, label: tag })), [derived.tags])
+  const featureOptions = useMemo(() => derived.features.map((key) => ({ value: key, label: featureLabel(key) })), [derived.features])
   const extent = useMemo(
     () => (tracks && filters.range ? featureExtent(tracks, filters.range.feature) : null),
     [tracks, filters.range],
@@ -30,6 +46,12 @@ export default function AtlasSettings({ store }: { store: AtlasStore }) {
   const hasFeatures = derived.features.length > 0
   const hasArtists = derived.artists.length > 0
   const { range } = filters
+  const colourModes: PickerOption[] = [
+    { value: 'none', label: 'None' },
+    { value: 'cluster', label: 'Cluster' },
+    { value: 'feature', label: 'Feature', disabled: !hasFeatures },
+    { value: 'artist', label: 'Artist', disabled: !hasArtists },
+  ]
 
   function chooseRangeFeature(feature: string): void {
     const bounds = tracks && feature ? featureExtent(tracks, feature) : null
@@ -42,83 +64,59 @@ export default function AtlasSettings({ store }: { store: AtlasStore }) {
 
   return (
     <section id="atlas-settings" className="settings glass" aria-label="Settings">
-      <div className="setting">
-        <span className="setting-label">Colour</span>
-        <select aria-label="Colour by" value={colourMode}
-          onChange={(event) => { if (isColourMode(event.target.value)) store.setColourMode(event.target.value) }}>
-          {COLOUR_MODES.map(({ value, label }) => (
-            <option key={value} value={value}
-              disabled={(value === 'feature' && !hasFeatures) || (value === 'artist' && !hasArtists)}>
-              {label}
-            </option>
-          ))}
-        </select>
-        {colourMode === 'feature' && hasFeatures ? (
-          <select aria-label="Colour feature" value={colourFeature ?? ''}
-            onChange={(event) => store.setColourFeature(event.target.value || null)}>
-            {derived.features.map((feature) => <option key={feature} value={feature}>{featureLabel(feature)}</option>)}
-          </select>
-        ) : null}
-      </div>
-
-      <div className="setting">
-        <span className="setting-label">Tags</span>
-        <select aria-label="Tag match" value={filters.tagMatch}
-          onChange={(event) => set({ tagMatch: event.target.value === 'any' ? 'any' : ('all' satisfies TagMatch) })}>
-          <option value="all">All of</option>
-          <option value="any">Any of</option>
-        </select>
-        <ChipInput label="Add tag" options={tagOptions} selected={filters.tags} onChange={(tags) => set({ tags })} />
-      </div>
-
-      <div className="setting">
-        <span className="setting-label">Cluster</span>
-        <select aria-label="Cluster scope" value={filters.scope}
-          onChange={(event) => {
-            const value = event.target.value
-            set({ scope: value === 'clustered' || value === 'unclustered' ? value : ('all' satisfies ClusterScope) })
-          }}>
-          <option value="all">All</option>
-          <option value="clustered">Clustered</option>
-          <option value="unclustered">Unclustered</option>
-        </select>
-        <ChipInput label="Add cluster" options={derived.clusters} selected={filters.clusterIds.map(String)}
-          onChange={(ids) => set({ clusterIds: ids.map(Number) })} />
-      </div>
-
-      {hasArtists ? (
-        <div className="setting">
-          <span className="setting-label">Artist</span>
-          <ChipInput label="Add artist" options={derived.artists} selected={filters.artists}
-            onChange={(artists) => set({ artists })} />
-          <label className="check">
-            <input type="checkbox" checked={filters.hideOtherArtists}
-              onChange={(event) => set({ hideOtherArtists: event.target.checked })} />
-            Hide others
-          </label>
-        </div>
-      ) : null}
-
-      {hasFeatures ? (
-        <div className="setting">
-          <span className="setting-label">Range</span>
-          <select aria-label="Range feature" value={range?.feature ?? ''} onChange={(event) => chooseRangeFeature(event.target.value)}>
-            <option value="">None</option>
-            {derived.features.map((feature) => <option key={feature} value={feature}>{featureLabel(feature)}</option>)}
-          </select>
-          {range && extent ? (
-            <div className="range">
-              <NumberField label="Minimum" value={range.min} onCommit={(raw) => changeBound('min', raw)} />
-              <NumberField label="Maximum" value={range.max} onCommit={(raw) => changeBound('max', raw)} />
-            </div>
+      <div className="settings-section">
+        <div className="section-head"><span className="setting-label">Colour</span></div>
+        <div className="row-controls">
+          <Dropdown label="Colour by" value={colourMode} options={colourModes}
+            onChange={(value) => { if (isColourMode(value)) store.setColourMode(value) }} />
+          {colourMode === 'feature' && hasFeatures ? (
+            <Dropdown label="Colour feature" value={colourFeature ?? ''} options={featureOptions}
+              onChange={(value) => store.setColourFeature(value || null)} />
           ) : null}
         </div>
-      ) : null}
+      </div>
 
-      <button type="button" className="button" disabled={!hasActiveFilters(filters)}
-        onClick={() => store.setFilters(EMPTY_FILTERS)}>
-        Clear
-      </button>
+      <div className="settings-section">
+        <div className="section-head">
+          <span className="setting-label">Filters</span>
+          <button type="button" className="button" disabled={!hasActiveFilters(filters)} onClick={() => store.setFilters(EMPTY_FILTERS)}>
+            Clear
+          </button>
+        </div>
+        <FilterRow label="Tags">
+          <Dropdown label="Tag match" value={filters.tagMatch} options={TAG_MATCHES}
+            onChange={(value) => set({ tagMatch: value === 'any' ? 'any' : ('all' satisfies TagMatch) })} />
+          <ChipInput label="Add tag" options={tagOptions} selected={filters.tags} onChange={(tags) => set({ tags })} />
+        </FilterRow>
+        <FilterRow label="Cluster">
+          <Dropdown label="Cluster scope" value={filters.scope} options={CLUSTER_SCOPES}
+            onChange={(value) => set({ scope: value === 'clustered' || value === 'unclustered' ? value : ('all' satisfies ClusterScope) })} />
+          <ChipInput label="Add cluster" options={derived.clusters} selected={filters.clusterIds.map(String)}
+            onChange={(ids) => set({ clusterIds: ids.map(Number) })} />
+        </FilterRow>
+        {hasArtists ? (
+          <FilterRow label="Artist">
+            <ChipInput label="Add artist" options={derived.artists} selected={filters.artists} onChange={(artists) => set({ artists })} />
+            <label className="check">
+              <input type="checkbox" checked={filters.hideOtherArtists} onChange={(event) => set({ hideOtherArtists: event.target.checked })} />
+              Hide others
+            </label>
+          </FilterRow>
+        ) : null}
+        {hasFeatures ? (
+          <FilterRow label="Range">
+            <Dropdown label="Range feature" value={range?.feature ?? ''} onChange={chooseRangeFeature}
+              options={[{ value: '', label: 'None' }, ...featureOptions]} />
+            {range && extent ? (
+              <>
+                <NumberField label="Minimum" value={range.min} onCommit={(raw) => changeBound('min', raw)} />
+                <span className="sep" aria-hidden="true">–</span>
+                <NumberField label="Maximum" value={range.max} onCommit={(raw) => changeBound('max', raw)} />
+              </>
+            ) : null}
+          </FilterRow>
+        ) : null}
+      </div>
     </section>
   )
 }

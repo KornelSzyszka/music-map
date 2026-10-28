@@ -45,7 +45,13 @@ export default function App() {
   }
 
   return (
-    <main className="app">
+    <>
+      <div className="ambient" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </div>
+      <main className="app">
       <header className="app-header">
         <h1 className="brand">Music Atlas</h1>
         <nav aria-label="Views">
@@ -71,6 +77,7 @@ export default function App() {
       ) : (
         <FeatureGraphView baseUrl="./atlas" />
       )}
-    </main>
+      </main>
+    </>
   )
 }

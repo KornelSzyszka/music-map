@@ -1,5 +1,6 @@
 import type { FeatureGraph, FeatureNode, FeatureSample } from '../../data/featureGraph'
 import { pearson, robustAxis, scatterPoints } from '../../derive/featureCharts'
+import Dropdown from '../Dropdown'
 import { formatNumber, genreSlot } from './format'
 
 const WIDTH = 360
@@ -50,14 +51,10 @@ export default function CompareScatter({ graph, feature, otherId, sampleState, h
 
   return (
     <figure>
-      <label className="field">
-        <span className="muted">Compare with</span>
-        <select value={other.id} onChange={(event) => onCompare(event.target.value)}>
-          {options.map((item) => (
-            <option key={item.id} value={item.id}>{item.label}</option>
-          ))}
-        </select>
-      </label>
+      <div className="field">
+        <span className="setting-label">Compare with</span>
+        <Dropdown label="Compare with" value={other.id} options={options.map((item) => ({ value: item.id, label: item.label }))} onChange={onCompare} />
+      </div>
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
