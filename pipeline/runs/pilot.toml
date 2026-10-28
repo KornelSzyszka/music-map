@@ -1,0 +1,36 @@
+# A run says WHAT to load and HOW to process it. It is versioned, so every atlas can be
+# reproduced from the commit that produced it. Machine-specific values (the data
+# directory) do not belong here; they live in .env.
+name = "pilot"
+description = "10k Jamendo tracks, stratified by first genre"
+
+[dataset]
+name = "jamendo"            # supported: jamendo
+
+[sample]
+size = 10000
+seed = 42
+stratify_by = "genres"      # proportional strata by the first genre tag
+
+[features]
+set = "acoustic-v1"         # see docs/decisions/0006-feature-set-acoustic-v1.md
+
+[projection]                # the 2-D map
+pca_components = 40
+umap_neighbors = 15
+umap_min_dist = 0.1
+
+[clusters]                  # HDBSCAN on a separate 10-D UMAP space (see ADR 0007)
+space_dims = 10
+space_neighbors = 15
+space_min_dist = 0.0
+min_cluster_size = 40
+min_samples = 5
+selection = "leaf"          # eom | leaf
+
+[neighbours]
+k = 15                      # nearest neighbours exported per track
+
+[quality]                   # neighbourhood-preservation metrics on a seeded subsample
+sample = 3000
+ks = [10, 30]

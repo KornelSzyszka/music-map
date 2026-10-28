@@ -5,7 +5,7 @@ import json
 from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 import numpy as np
 import pandas as pd
@@ -23,6 +23,9 @@ COORDINATE_DECIMALS = 4
 TOP_TAG_COUNT = 3
 LABEL_TAG_COUNT = 2
 TAG_COLUMNS = ("genres", "instruments", "moods")
+# A cluster tag must cover this share of the cluster (and at least MIN_TAG_MEMBERS).
+MIN_TAG_SHARE = 0.08
+MIN_TAG_MEMBERS = 3
 
 
 class AtlasMeta(TypedDict):
@@ -34,6 +37,12 @@ class AtlasMeta(TypedDict):
     feature_set_id: str
     track_count: int
     seed: int
+    run: NotRequired[str]
+    distance_metric: NotRequired[str]
+    parameters: NotRequired[dict[str, Any]]
+    library_versions: NotRequired[dict[str, str]]
+    quality: NotRequired[dict[str, Any]]
+    summary: NotRequired[dict[str, Any]]
 
 
 def _dumps(payload: object, **options: Any) -> str:
@@ -89,21 +98,45 @@ def write_tracks(
     _write_gzip_json(out / TRACKS_FILE, tracks)
 
 
+def _tag_counts(df: pd.DataFrame, rows: np.ndarray | None = None) -> Counter:
+    frame = df if rows is None else df.iloc[rows]
+    return Counter(
+        tag for column in TAG_COLUMNS for tags in frame[column] for tag in tags
+    )
+
+
+def _describing_tags(
+    members: Counter, size: int, overall: Counter, total: int
+) -> list[str]:
+    """Tags over-represented in a cluster (lift over the whole data set)."""
+    scored = []
+    for tag, count in members.items():
+        if count < max(MIN_TAG_MEMBERS, MIN_TAG_SHARE * size):
+            continue
+        lift = (count / size) / (overall[tag] / total)
+        scored.append((-lift, -count, tag))
+    scored.sort()
+    if not scored:
+        return [tag for tag, _ in members.most_common(TOP_TAG_COUNT)]
+    return [tag for _, _, tag in scored[:TOP_TAG_COUNT]]
+
+
 def write_clusters(
     out: Path, df: pd.DataFrame, Y: np.ndarray, labels: np.ndarray
 ) -> None:
-    """Write one record per cluster (noise excluded) with centroid and top tags."""
+    """Write one record per cluster (noise excluded) with centroid and top tags.
+
+    Tags are ranked by lift, so a label names what is distinctive about the
+    cluster instead of the tags that are common everywhere.
+    """
     _check_lengths(tracks=len(df), positions=len(Y), labels=len(labels))
+    overall = _tag_counts(df)
     clusters = []
     for cluster_id in sorted(set(labels.tolist()) - {NOISE_LABEL}):
         members = np.flatnonzero(labels == cluster_id)
-        tags = Counter(
-            tag
-            for column in TAG_COLUMNS
-            for member in members
-            for tag in df.iloc[member][column]
+        top_tags = _describing_tags(
+            _tag_counts(df, members), len(members), overall, len(df)
         )
-        top_tags = [tag for tag, _ in tags.most_common(TOP_TAG_COUNT)]
         label = " / ".join(top_tags[:LABEL_TAG_COUNT]) or f"Cluster {cluster_id}"
         centroid = Y[members].mean(axis=0)
         clusters.append(

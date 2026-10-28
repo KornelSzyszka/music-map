@@ -22,12 +22,16 @@ def reduce_pca(X: np.ndarray, n_components: int) -> np.ndarray:
 
 
 def project_umap(
-    Z: np.ndarray, n_neighbors: int, min_dist: float, seed: int
+    Z: np.ndarray,
+    n_neighbors: int,
+    min_dist: float,
+    seed: int,
+    n_components: int = 2,
 ) -> np.ndarray:
-    """Project intermediate features into two dimensions."""
+    """Project intermediate features into n_components dimensions (2 for the map)."""
     # A fixed random_state makes UMAP reproducible at the cost of parallelism.
     reducer = UMAP(
-        n_components=2,
+        n_components=n_components,
         n_neighbors=n_neighbors,
         min_dist=min_dist,
         random_state=seed,
@@ -35,9 +39,23 @@ def project_umap(
     return reducer.fit_transform(Z)
 
 
-def cluster_hdbscan(Z: np.ndarray, min_cluster_size: int) -> np.ndarray:
-    """Assign cluster labels in intermediate feature space; noise is -1."""
-    return HDBSCAN(min_cluster_size=min_cluster_size, copy=True).fit_predict(Z)
+def cluster_hdbscan(
+    Z: np.ndarray,
+    min_cluster_size: int,
+    min_samples: int | None = None,
+    selection: str = "eom",
+) -> np.ndarray:
+    """Assign cluster labels; noise is -1.
+
+    ``selection`` is HDBSCAN's cluster selection method: ``eom`` (fewer, larger
+    clusters) or ``leaf`` (many small, homogeneous clusters).
+    """
+    return HDBSCAN(
+        min_cluster_size=min_cluster_size,
+        min_samples=min_samples,
+        cluster_selection_method=selection,
+        copy=True,
+    ).fit_predict(Z)
 
 
 def knn(X: np.ndarray, k: int) -> tuple[np.ndarray, np.ndarray]:
