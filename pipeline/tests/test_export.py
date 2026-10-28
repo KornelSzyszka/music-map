@@ -54,7 +54,7 @@ def test_tracks_follow_the_contract(exported, tracks):
     records = read_gzip_json(out / TRACKS_FILE)
     assert len(records) == len(tracks)
     assert set(records[1]) == {
-        "id", "title", "artist", "x", "y", "cluster_id",
+        "id", "title", "artist", "artist_id", "x", "y", "cluster_id",
         "genres", "instruments", "moods", "features", "source_url",
     }  # fmt: skip
     assert records[1]["genres"] == ["rock"]

@@ -37,3 +37,6 @@ pipeline/.pytest_cache/
 
 # Local copy of the pipeline export used by the dev server
 frontend/public/atlas/
+
+# Local pytest scratch directory
+pipeline/.pytest_tmp/

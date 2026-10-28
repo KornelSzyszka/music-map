@@ -82,6 +82,7 @@ def write_tracks(
             "id": row.id,
             "title": row.title,
             "artist": row.artist,
+            "artist_id": getattr(row, "artist_id", None),
             "x": round(float(x), COORDINATE_DECIMALS),
             "y": round(float(y), COORDINATE_DECIMALS),
             "cluster_id": None if label == NOISE_LABEL else int(label),

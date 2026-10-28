@@ -35,7 +35,7 @@ from music_atlas.project import (
     reduce_pca,
 )
 
-SCHEMA_VERSION = "0.2"
+SCHEMA_VERSION = "0.3"
 DISTANCE_METRIC = "euclidean on clipped, standardised features"
 LIBRARIES = ("numpy", "pandas", "scikit-learn", "umap-learn")
 # Raw values exported with every track for the details panel.
