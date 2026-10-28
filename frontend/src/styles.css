@@ -193,3 +193,25 @@ circle.dot.series-1, circle.dot.series-2, circle.dot.series-3 { opacity: 0.85; }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto; transition: none; }
 }
+
+/* Map view */
+.notice { background: var(--surface-raised); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 0 0 12px; }
+.atlas-layout { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); gap: 20px; align-items: start; margin-top: 12px; }
+@media (max-width: 900px) { .atlas-layout { grid-template-columns: minmax(0, 1fr); } }
+.atlas-canvas { width: 100%; height: auto; display: block; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 8px; touch-action: none; cursor: grab; }
+.atlas-canvas:active { cursor: grabbing; }
+.atlas-canvas:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+section[aria-label='Atlas controls'] { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+section[aria-label='Atlas controls'] > p { flex-basis: 100%; margin: 0; }
+section[aria-label='Atlas controls'] input[type='search'], section[aria-label='Atlas controls'] select, section[aria-label='Atlas controls'] button {
+  font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px;
+}
+section[aria-label='Atlas controls'] select[multiple] { height: 5.5em; }
+.track-details { background: var(--surface-raised); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.tag { border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; font-size: 0.8rem; }
+.neighbour-list { padding-left: 1.2em; margin: 0 0 8px; display: grid; gap: 4px; }
+.neighbour-list button { font: inherit; color: var(--text); background: none; border: none; padding: 0; text-decoration: underline; cursor: pointer; text-align: left; }
+section[aria-label='Atlas controls'] label { display: flex; flex-direction: column; gap: 2px; font-size: 0.8rem; color: var(--text-muted); }
+section[aria-label='Atlas controls'] select[multiple] { height: 4.4em; min-width: 9em; }
+section[aria-label='Atlas controls'] button { align-self: end; }

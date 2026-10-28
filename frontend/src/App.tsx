@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { chooseAtlasSource, type AtlasSource } from './data/source'
 import AtlasView from './panels/AtlasView'
 import FeatureGraphView from './panels/FeatureGraphView'
 
@@ -9,9 +10,18 @@ const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'features', label: 'Features' },
 ]
 
-// The map tab uses the bundled synthetic atlas until the pipeline export exists.
 export default function App() {
-  const [tab, setTab] = useState<Tab>('features')
+  const [tab, setTab] = useState<Tab>('map')
+  const [source, setSource] = useState<AtlasSource | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    void chooseAtlasSource(fetch, controller.signal).then((chosen) => {
+      if (!controller.signal.aborted) setSource(chosen)
+    })
+    return () => controller.abort()
+  }, [])
+
   return (
     <main className="app">
       <header className="app-header">
@@ -24,7 +34,22 @@ export default function App() {
           ))}
         </nav>
       </header>
-      {tab === 'map' ? <AtlasView baseUrl="./fixtures" /> : <FeatureGraphView baseUrl="./atlas" />}
+      {tab === 'map' ? (
+        source ? (
+          <>
+            {source.synthetic ? (
+              <p className="notice" role="note">
+                Showing the bundled synthetic demo. Build the real atlas with <code>npm run atlas</code> and restart.
+              </p>
+            ) : null}
+            <AtlasView baseUrl={source.baseUrl} />
+          </>
+        ) : (
+          <p role="status">Looking for the atlas…</p>
+        )
+      ) : (
+        <FeatureGraphView baseUrl="./atlas" />
+      )}
     </main>
   )
 }

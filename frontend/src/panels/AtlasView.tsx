@@ -5,6 +5,7 @@ import { fitView } from '../map/geometry'
 import { createAtlasStore } from '../state/store'
 import { useAtlasStore } from '../state/useAtlasStore'
 import AtlasControls from './AtlasControls'
+import TrackDetails from './TrackDetails'
 
 /** Mount this view with a static export directory, or use the bundled synthetic fixture. */
 export default function AtlasView({ baseUrl = './fixtures' }: { baseUrl?: string }) {
@@ -30,7 +31,10 @@ export default function AtlasView({ baseUrl = './fixtures' }: { baseUrl?: string
       {status === 'error' ? <p role="alert">{error}</p> : null}
       {status === 'ready' ? <>
         <AtlasControls store={store} />
-        <AtlasMap store={store} />
+        <div className="atlas-layout">
+          <AtlasMap store={store} />
+          <TrackDetails store={store} />
+        </div>
       </> : null}
     </section>
   )

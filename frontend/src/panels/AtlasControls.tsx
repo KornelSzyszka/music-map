@@ -35,7 +35,7 @@ export default function AtlasControls({ store }: { store: AtlasStore }) {
       <button onClick={() => store.setView({ ...view, scale: Math.max(0.01, view.scale / 1.2) })}>Zoom out</button>{' '}
       <button onClick={() => store.setView(fitView(atlas?.tracks ?? []))}>Fit all points</button>
       <p role="status">{derived.visibleCount} of {atlas?.tracks.length ?? 0} tracks visible.</p>
-      <p>Grey points have no cluster or tag. Click a point to select it. Use arrow keys on the map to pan.</p>
+      <p className="muted">Grey points belong to no cluster. Scroll to zoom, drag to pan, click a point to select it; arrow keys and +/- also work on the map.</p>
       <p aria-live="polite">{selected ? `Selected: ${selected.title} — ${selected.artist}` : 'No track selected.'}</p>
     </section>
   )

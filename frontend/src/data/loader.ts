@@ -1,4 +1,4 @@
-import type { AtlasManifest, Cluster, Neighbors, Track } from './types'
+import type { AtlasManifest, AtlasQuality, AtlasSummary, Cluster, Neighbors, Track } from './types'
 
 export interface Atlas {
   readonly manifest: AtlasManifest
@@ -60,10 +60,34 @@ export function strings(value: unknown, path: string): string[] {
   return array(value, path).map((item, index) => string(item, `${path}[${index}]`))
 }
 
+const SUPPORTED_SCHEMAS = ['0.1', '0.2']
+
+function summary(value: unknown): AtlasSummary {
+  const data = record(value, 'manifest.summary')
+  return {
+    requested: integer(data.requested, 'manifest.summary.requested'),
+    dropped_without_features: integer(data.dropped_without_features, 'manifest.summary.dropped_without_features'),
+    clusters: integer(data.clusters, 'manifest.summary.clusters'),
+    clustered_share: number(data.clustered_share, 'manifest.summary.clustered_share'),
+  }
+}
+
+function quality(value: unknown): AtlasQuality {
+  return Object.fromEntries(Object.entries(record(value, 'manifest.quality')).map(([method, byK]) => [
+    method,
+    Object.fromEntries(Object.entries(record(byK, `manifest.quality.${method}`)).map(([k, metrics]) => [
+      k,
+      Object.fromEntries(Object.entries(record(metrics, `manifest.quality.${method}.${k}`)).map(([metric, score]) => [
+        metric, number(score, `manifest.quality.${method}.${k}.${metric}`),
+      ])),
+    ])),
+  ]))
+}
+
 function manifest(value: unknown): AtlasManifest {
   const data = record(value, 'manifest')
-  if (data.schema_version !== '0.1') {
-    return invalid('manifest.schema_version', 'supported version "0.1"')
+  if (typeof data.schema_version !== 'string' || !SUPPORTED_SCHEMAS.includes(data.schema_version)) {
+    return invalid('manifest.schema_version', `one of the supported versions ${SUPPORTED_SCHEMAS.join(', ')}`)
   }
   return {
     schema_version: data.schema_version,
@@ -72,6 +96,10 @@ function manifest(value: unknown): AtlasManifest {
     feature_set_id: identifier(data.feature_set_id, 'manifest.feature_set_id'),
     track_count: integer(data.track_count, 'manifest.track_count'),
     seed: integer(data.seed, 'manifest.seed', false),
+    ...(data.run === undefined ? {} : { run: string(data.run, 'manifest.run') }),
+    ...(data.distance_metric === undefined ? {} : { distance_metric: string(data.distance_metric, 'manifest.distance_metric') }),
+    ...(data.summary === undefined ? {} : { summary: summary(data.summary) }),
+    ...(data.quality === undefined ? {} : { quality: quality(data.quality) }),
   }
 }
 
