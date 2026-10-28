@@ -26,7 +26,8 @@ flowchart LR
   C --> D[features<br/>select, transform, standardise]
   D --> E[PCA 30-50D]
   E --> F[UMAP 2D]
-  E --> G[HDBSCAN]
+  E --> M[UMAP 10D cluster space]
+  M --> G[HDBSCAN leaf]
   D --> H[kNN in feature space]
   F --> I[evaluate<br/>trustworthiness, continuity, recall]
   H --> I
@@ -37,6 +38,10 @@ flowchart LR
 ```
 
 Each stage writes an artefact together with a hash of its parameters, so variants can be compared and runs resumed.
+
+## Runs: choosing what to load
+
+A run is a versioned TOML file in `pipeline/runs/` (`pilot.toml`): dataset, sample size and seed, feature set, projection, clustering, neighbours and quality settings. `npm run atlas` executes it through `pipeline/scripts/run.py pilot` and writes `data/derived/<run>/`. Unknown keys are errors. `.env` holds only machine-specific values (the data directory); experiment choices belong in the run file so that every atlas is reproducible from its commit and its manifest. The manifest records the parameters, library versions, distance metric and quality scores.
 
 ## Runtime flow (browser)
 
@@ -55,8 +60,14 @@ Field names are the wire format. `schema_version` is bumped on any change. The c
 **Manifest**
 
 ```json
-{"schema_version": "0.1", "dataset_version": "pilot-001", "projection_id": "acoustic-v1-umap40",
- "feature_set_id": "acoustic-v1", "track_count": 10000, "seed": 42}
+{"schema_version": "0.2", "dataset_version": "jamendo-10000-seed42",
+ "projection_id": "acoustic-v1-pca40-umap15-hdbscan40leaf", "feature_set_id": "acoustic-v1",
+ "track_count": 10000, "seed": 42, "run": "pilot",
+ "distance_metric": "euclidean on clipped, standardised features",
+ "parameters": {"sample_size": 10000, "umap_neighbors": 15},
+ "library_versions": {"umap-learn": "0.5.12"},
+ "quality": {"umap": {"10": {"trustworthiness": 0.862, "continuity": 0.930, "recall": 0.129}}},
+ "summary": {"requested": 10000, "dropped_without_features": 0, "clusters": 41, "clustered_share": 0.389}}
 ```
 
 **Track**

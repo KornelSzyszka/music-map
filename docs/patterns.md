@@ -87,3 +87,10 @@ Copy the template, fill every field, keep it short. Link the code that implement
 - **Rule:** iterate members and parse them in memory; accept only regular files with the expected extension; never extract to disk and never execute content.
 - **Why:** downloaded files are untrusted input (path traversal, links). Rejected: `extractall`.
 - **Where:** `pipeline/src/music_atlas/features.py` (`_iter_documents`).
+
+### Runs are versioned files
+- **Status:** present
+- **Context:** the atlas depends on many choices: dataset, sample, feature set, projection and clustering parameters.
+- **Rule:** every choice lives in a TOML run file in `pipeline/runs/`, validated strictly (unknown keys fail). `.env` holds only machine-specific values. The manifest copies the parameters, library versions and quality scores.
+- **Why:** an atlas is reproducible from its commit; experiments differ by a file, not by command-line flags or environment. Rejected: parameters in `.env` or scattered CLI options.
+- **Where:** `pipeline/runs/*.toml`, `pipeline/src/music_atlas/runs.py`, `pipeline/scripts/run.py`.

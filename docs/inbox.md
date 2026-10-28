@@ -11,3 +11,6 @@ Unaccepted ideas and open questions. Promote an item to a decision (`docs/decisi
 | Offline/desktop use | question | User: "probably not" | user |
 | Handling tracks with incomplete features | question | Not yet observed in the data | pipeline owner |
 | Search index format and export chunking | question | Depends on measured size | after the pilot export |
+| Same-artist tracks dominate nearest neighbours | finding | In the pilot, 1-2 of 10 neighbours often share the artist (album/production effect) | option to exclude same-artist neighbours, user |
+| Only 39% of tracks fall in a cluster | finding | acoustic-v1 forms a continuum (ADR 0007) | accept, or try other features |
+| Low neighbour recall (0.13 at k=10) | finding | expected for a 96-D to 2-D projection; UMAP beats the PCA baseline (0.06) | discuss in the report |

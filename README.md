@@ -26,11 +26,14 @@ Run everything from the repository root. The apps live in `pipeline/` and `front
 cp .env.example .env     # then set MUSIC_MAP_DATA_DIR (see "Source data" below)
 npm run setup            # installs frontend and pipeline dependencies
 npm run data             # downloads the source data (about 1.4 GB, once)
-npm run graph            # builds the feature export from it (about 2 minutes)
+npm run graph            # builds the feature graph export (about 2 minutes)
+npm run atlas            # builds the 10k-track atlas from pipeline/runs/pilot.toml (about 2 minutes)
 npm run dev              # starts the app on http://localhost:5173
 ```
 
-`npm run dev` works without the data too: the Map tab uses a bundled synthetic atlas, and the Features tab stays empty until `npm run graph` has run.
+`npm run dev` works without the data too: the Map tab falls back to a bundled synthetic atlas (with a notice), and the Features tab stays empty until `npm run graph` has run.
+
+**What gets loaded** is decided by a run file, not by `.env`: edit `pipeline/runs/pilot.toml` (or copy it to a new name and run `uv run python scripts/run.py <name>` from `pipeline/`) to change the sample size, seed, feature set or any projection and clustering parameter. `ATLAS_RUN=<name> npm run dev` shows another run.
 
 Environment: `scripts/build-atlas.ps1` (alias `music-atlas-build`) checks tools, creates `.env` and installs both sets of dependencies; `-Data` also fetches the data, `-Check` runs the gates afterwards. `music-atlas` starts the app.
 
