@@ -6,7 +6,7 @@
 - Owning role: technical-lead / implementer
 - Responsible agent: Claude (substantial technical work)
 - Prepared by: Claude, 2026-10-27
-- Context: `docs/architecture.md` (data flow, contract), `docs/code-style.md`, `docs/patterns.md`, ADR 0002
+- Context: `docs/architecture.md` (data flow, contract), `docs/code-style.md`, `docs/patterns.md`, [stack decision](../decisions/0002-stack.md)
 - Relevant skill: `agent-technical-change`
 
 ## Contract

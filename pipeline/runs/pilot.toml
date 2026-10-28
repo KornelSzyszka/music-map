@@ -23,7 +23,7 @@ layout = "umap"                 # the map shown first
 alternate_layout = "hierarchical"  # exported too, so the app can switch (omit for none)
 hierarchy_fill = 0.2            # share of the area spanned by the cluster centres that discs may cover
 
-[clusters]                  # HDBSCAN on a separate 10-D UMAP space (see ADR 0007)
+[clusters]                  # HDBSCAN on a separate 10-D UMAP space (see the cluster-space decision, docs/decisions/0007-cluster-space.md)
 space_dims = 10
 space_neighbors = 15
 space_min_dist = 0.0

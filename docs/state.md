@@ -4,7 +4,7 @@ Updated: 2026-10-27
 
 ## Phase
 
-Skeleton with verified tooling; projection core reviewed by Codex (5 findings, 4 fixed; manifest reproducibility metadata deferred to the pilot). Agent workflow adopted (ADR 0001).
+Skeleton with verified tooling; projection core reviewed by Codex (5 findings, 4 fixed; manifest reproducibility metadata deferred to the pilot). Agent workflow adopted ([working agreement](decisions/0001-working-agreement.md)).
 
 ## Verified
 
@@ -14,17 +14,17 @@ Skeleton with verified tooling; projection core reviewed by Codex (5 findings, 4
 
 - Features tab: `pipeline/scripts/build_feature_graph.py` exports `features.json.gz` and `feature_sample.json.gz`. The frontend shows a spring graph of 96 features (drag, zoom, family filter) and, per feature, five views: distribution, genre ridgeline, quartiles, tag bars and a scatter against another feature. Checked in headless Edge in light and dark mode: settling, drag pulls neighbours, tabs, zoom, no console errors.
 
-- Map tab (pilot atlas): 10 000 tracks, 41 clusters covering 39% of them (ADR 0007), UMAP trustworthiness 0.86 vs 0.82 for a 2-D PCA baseline at k=10. Zoom, pan, click, search, cluster labels and a nearest-neighbour panel work in headless Edge (light and dark), no console errors. Load time to first paint about 2.5 s.
+- Map tab (pilot atlas): 10 000 tracks, 41 clusters covering 39% of them ([cluster-space decision](decisions/0007-cluster-space.md)), UMAP trustworthiness 0.86 vs 0.82 for a 2-D PCA baseline at k=10. Zoom, pan, click, search, cluster labels and a nearest-neighbour panel work in headless Edge (light and dark), no console errors. Load time to first paint about 2.5 s.
 
-- Map interface (ADR 0008, `docs/design.md`): Settings panel with colour modes (None, Cluster, Feature, Artist) and a legend, filters by tags (all or any), cluster, artist (highlight or hide others) and a feature range, a neutral dark and light theme with a switch, and no instructional text. Checked in headless Edge in both themes. Artist selection needs `artist_id` in the export (schema 0.3).
+- Map interface ([interface-direction decision](decisions/0008-interface-direction-and-artist-level.md), `docs/design.md`): Settings panel with colour modes (None, Cluster, Feature, Artist) and a legend, filters by tags (all or any), cluster, artist (highlight or hide others) and a feature range, a neutral dark and light theme with a switch, and no instructional text. Checked in headless Edge in both themes. Artist selection needs `artist_id` in the export (schema 0.3).
 
-- Hierarchical layout (ADR 0009, proposed): `pipeline/runs/pilot-hier.toml` places clusters by feature-space distance (Spearman 0.93 vs 0.77) and arranges tracks inside; continuity drops from 0.93 to 0.88. The global UMAP stays the default; the app switches between both layouts in Settings (the default run exports both, schema 0.5). Unclustered tracks are tinted with their nearest cluster in the Cluster colour mode.
+- Hierarchical layout ([hierarchical-layout decision](decisions/0009-hierarchical-layout.md), proposed): `pipeline/runs/pilot-hier.toml` places clusters by feature-space distance (Spearman 0.93 vs 0.77) and arranges tracks inside; continuity drops from 0.93 to 0.88. The global UMAP stays the default; the app switches between both layouts in Settings (the default run exports both, schema 0.5). Unclustered tracks are tinted with their nearest cluster in the Cluster colour mode.
 
-- Style (ADR 0010, `docs/design.md`): glass panels around the data, monospaced labels and values, permanent selected-track panel on the right, legend and control bar under the map; the Features tab has the same shape.
+- Style ([glass-style decision](decisions/0010-glass-data-analyst-style.md), `docs/design.md`): glass panels around the data, monospaced labels and values, permanent selected-track panel on the right, legend and control bar under the map; the Features tab has the same shape.
 
 ## Not done / limits
 
-- `project`, `evaluate`, `export` are implemented and tested on synthetic data (27 tests); `features` is implemented (96-feature set `acoustic-v1`, ADR 0006 proposed); `ingest` is implemented (Codex) and verified on the real files (55 609 tracks).
+- `project`, `evaluate`, `export` are implemented and tested on synthetic data (27 tests); `features` is implemented (96-feature set `acoustic-v1`, [feature-set decision](decisions/0006-feature-set-acoustic-v1.md) proposed); `ingest` is implemented (Codex) and verified on the real files (55 609 tracks).
 - Feature selection for the map is undecided. Full feature download status: see the latest task note.
 - Course formal requirements and design tokens are unknown (`docs/inbox.md`).
 

@@ -9,9 +9,9 @@ Facts here were checked against files on disk unless marked **unverified**. Raw 
 | Track metadata and tags (TSV) | clone of `github.com/MTG/mtg-jamendo-dataset` | `ingest`: ids, titles, artists, genre/instrument/mood tags | `npm run data` (git clone) |
 | Feature archives (100 x `.tar.gz`, ~1.3 GB) | MTG CDN `cdn.freesound.org/mtg-jamendo/raw_30s/acousticbrainz/` | `features`: the 96 acoustic features | `npm run data` (SHA-256 verified against the list in the clone) |
 
-Both sit under `MUSIC_MAP_DATA_DIR` (set in `.env`), in `mtg-jamendo-dataset/` and `mtg-jamendo/acousticbrainz/`. The layout is defined once in `pipeline/src/music_atlas/datasets.py` and downloaded by `pipeline/src/music_atlas/fetch.py`. Not used: audio, mel-spectrograms, other datasets (FMA is only an alternative, see ADR 0003).
+Both sit under `MUSIC_MAP_DATA_DIR` (set in `.env`), in `mtg-jamendo-dataset/` and `mtg-jamendo/acousticbrainz/`. The layout is defined once in `pipeline/src/music_atlas/datasets.py` and downloaded by `pipeline/src/music_atlas/fetch.py`. Not used: audio, mel-spectrograms, other datasets (FMA is only an alternative, see [first-dataset decision](decisions/0003-first-dataset.md)).
 
-## MTG-Jamendo (first dataset, ADR 0003)
+## MTG-Jamendo (first dataset, [why it was chosen](decisions/0003-first-dataset.md))
 
 Source: https://github.com/MTG/mtg-jamendo-dataset (full clone). Metadata CC BY-NC-SA 4.0; audio has per-file licences; non-commercial academic use.
 
@@ -33,7 +33,7 @@ Checked on `00/1002000.json`:
 | `rhythm` | `bpm`, `beats_count`, `onset_rate`, `danceability`, beats loudness, BPM histogram peaks (+ `beats_position` list, 156 values here) | 277 incl. beat positions |
 | `tonal` | `key_key/scale/strength`, chords (key, scale, rate, strength, 24-bin histogram), HPCP and its entropy, tuning (frequency, deviation, diatonic strength) | 409 |
 
-Most descriptors are summary statistics over frames: `mean`, `var`, `min`, `max`, `median` and first/second-difference stats (`dmean`, `dmean2`, `dvar`, `dvar2`). Features are per-track summaries, not time series. The proposed selection of 96 features is in [ADR 0006](decisions/0006-feature-set-acoustic-v1.md). The feature archives hold 55 699 tracks, of which 55 607 are in the 50-artist metadata file.
+Most descriptors are summary statistics over frames: `mean`, `var`, `min`, `max`, `median` and first/second-difference stats (`dmean`, `dmean2`, `dvar`, `dvar2`). Features are per-track summaries, not time series. The proposed selection of 96 features is in [feature-set decision](decisions/0006-feature-set-acoustic-v1.md). The feature archives hold 55 699 tracks, of which 55 607 are in the 50-artist metadata file.
 
 ### Not used
 

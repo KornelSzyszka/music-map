@@ -5,7 +5,7 @@
 - Goal and user-visible outcome: `ingest` turns the Jamendo metadata into a validated, reproducibly sampled tracks table.
 - Owning role: implementer
 - Responsible agent: Codex
-- Prepared by: Claude, 2026-10-27 (evidence: this brief; decisions in ADR 0003)
+- Prepared by: Claude, 2026-10-27 (evidence: this brief; decisions in [first-dataset decision](../decisions/0003-first-dataset.md))
 - Context: `docs/datasets.md` (verified columns and tag format), `docs/code-style.md`, `docs/patterns.md`
 - Relevant skill: `agent-technical-change`
 

@@ -1,5 +1,5 @@
 # Same data and parameters as pilot.toml, but clusters are placed first and the
-# tracks of each cluster are arranged inside its disc (see ADR 0009).
+# tracks of each cluster are arranged inside its disc (see the hierarchical-layout decision, docs/decisions/0009-hierarchical-layout.md).
 name = "pilot-hier"
 description = "10k Jamendo tracks, hierarchical layout: clusters first, then tracks"
 

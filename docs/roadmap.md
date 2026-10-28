@@ -8,7 +8,7 @@ Status: proposed until the user accepts it. Dates are not committed; the present
 | Projection core | `project` (PCA → UMAP, HDBSCAN, kNN), `evaluate`, `export` on synthetic data, per the data contract | Claude → Codex | Process |
 | Jamendo ingest | Jamendo metadata: parse tags by category, validate, deduplicate, seeded stratified sample | Codex (Claude brief) → Claude | Process |
 | Frontend base | Loader with contract validation, `state`, `derive` (filter mask, search, colour) on a fixture | Codex (Claude brief) → Claude | Process |
-| Render spike | deck.gl vs Canvas 2D, frame rate at 10k points, ADR | Codex → Claude | Frontend base |
+| Render spike | deck.gl vs Canvas 2D, frame rate at 10k points, decision record | Codex → Claude | Frontend base |
 | Feature extraction | Feature extraction from the JSON archives, selection, standardisation, `feature_set_id` | Claude → Codex | Jamendo ingest, feature download |
 | Pilot (done) | About 10k real tracks through the whole pipeline, shown in the browser | Claude → Codex | Projection core, Jamendo ingest, Frontend base, Render spike, Feature extraction |
 | Evaluation | PCA/MDS/t-SNE/UMAP comparison, parameters, results for the report | Claude → Codex | Pilot |
