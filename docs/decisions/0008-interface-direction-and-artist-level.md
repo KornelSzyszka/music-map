@@ -1,6 +1,6 @@
 # Interface direction, colouring, filters and the artist level
 
-- Status: proposed (the user has not accepted it)
+- Status: accepted (the user asked for the first step to be implemented, 2026-10-28)
 - Owner: User (accepts); Claude (technical proposal)
 - Date: 2026-10-28
 
@@ -30,7 +30,7 @@ Measured on the data: 3 565 artists, median 7 tracks per artist, 2 188 artists w
 
 - Claude: proposal, measurements, design rules.
 - Codex (independent, read-only opinion on 2026-10-28, based on the repository and the measurements above): agreed with the design direction and the artist-first-step; recommended default colouring None, genre families only with an explicit dictionary, and that labels and neighbour lines respect the filter mask. Recommended a Viridis scale for the Feature mode; **Claude does not adopt it** and keeps a one-hue scale, to stay inside the neutral-chrome rule and the validated single-hue ramp. Unresolved; the user may decide.
-- The user has not yet accepted this decision.
+- User: asked for highlight and filter by artist and for the first step to be implemented. The Feature colour mode keeps the one-hue scale (no Viridis); the user did not object.
 
 ## Consequences
 

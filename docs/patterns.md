@@ -94,3 +94,11 @@ Copy the template, fill every field, keep it short. Link the code that implement
 - **Rule:** every choice lives in a TOML run file in `pipeline/runs/`, validated strictly (unknown keys fail). `.env` holds only machine-specific values. The manifest copies the parameters, library versions and quality scores.
 - **Why:** an atlas is reproducible from its commit; experiments differ by a file, not by command-line flags or environment. Rejected: parameters in `.env` or scattered CLI options.
 - **Where:** `pipeline/runs/*.toml`, `pipeline/src/music_atlas/runs.py`, `pipeline/scripts/run.py`.
+
+### State holds colour slots, the theme resolves them
+- **Status:** present
+- **Context:** the map is drawn on a canvas in two themes.
+- **Rule:** derived state stores a colour slot per track (series index, sequential step, grey or base), never a colour value. The canvas reads the slot's value from the CSS tokens at draw time and repaints on a theme change.
+- **Why:** one entity keeps one slot in every theme and filter state, and the palette lives in one place (`frontend/src/styles.css`). Rejected: colour strings in the store.
+- **Where:** `frontend/src/derive/colouring.ts`, `frontend/src/map/AtlasMap.tsx`.
+
