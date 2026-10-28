@@ -4,14 +4,14 @@ An interactive 2D map of music tracks. Each track is a point; its position comes
 
 Course project for *Visualization of Large Datasets* (Wrocław University of Science and Technology).
 
-> **Status:** project skeleton. Pipeline stages are typed stubs and the frontend shows a placeholder screen. Nothing is deployed.
+> **Status:** working pilot on 10 000 tracks. Nothing is deployed. See [docs/state.md](docs/state.md).
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
 | `pipeline/` | Offline Python pipeline (`music_atlas` package): ingest, features, projection, evaluation, export |
-| `frontend/` | React + TypeScript + Vite app rendering the map with deck.gl |
+| `frontend/` | React + TypeScript + Vite app rendering the map on a Canvas 2D |
 | `experiments/` | Notebooks and projection-comparison results (optional) |
 | `data/` | Local data layout notes; contents are git-ignored |
 | `docs/` | Architecture, code style, design patterns |
@@ -74,6 +74,45 @@ All source data lives in one directory that you choose; it is never inside the r
 ```
 
 That is all the project uses: track metadata and tags from the repository, and the Essentia feature JSON files from the archives. No audio and no spectrograms. `npm run data:check` reports what is present without downloading.
+
+## Working with the dataset
+
+### 1. Connect the dataset
+
+1. Pick a directory with about 2 GB free, outside the repository.
+2. `cp .env.example .env` and set `MUSIC_MAP_DATA_DIR` to that directory.
+3. `npm run data` downloads the metadata clone and the 100 feature archives (resumable, SHA-256 verified; a CDN 503 just means run it again).
+4. `npm run data:check` lists what is present and what is missing. Nothing else is needed: the layout under the directory is fixed by `pipeline/src/music_atlas/datasets.py`.
+
+### 2. Use the data directly (Python)
+
+Run from `pipeline/` with `uv run python`. Metadata and features are separate tables joined on the track id.
+
+```python
+from music_atlas.config import get_data_dir
+from music_atlas.datasets import features_dir
+from music_atlas.features import ACOUSTIC_V1, build_matrix, read_features
+from music_atlas.ingest import SubsetSpec, load_tracks
+
+data_dir = get_data_dir()                                   # from MUSIC_MAP_DATA_DIR
+tracks = load_tracks(data_dir, SubsetSpec(n=2000, seed=1))  # n=None loads all 55k tracks
+features = read_features(features_dir(data_dir), ACOUSTIC_V1, set(tracks["id"]))
+X = build_matrix(features, ACOUSTIC_V1)                     # (tracks, 96) float matrix
+```
+
+`tracks` holds ids, titles, artists and the genre, instrument and mood tags. `read_features` scans all archives, so expect a minute or two even for a small sample; `SubsetSpec(n=..., stratify_by="genres")` samples proportionally per first genre. Tags are labels for colouring, filtering and evaluation, never projection input. The fields and facts about the files are in [docs/datasets.md](docs/datasets.md).
+
+### 3. Load it into Music Atlas
+
+A **run file** in `pipeline/runs/` says what to load and how to process it (sample size, seed, feature set, projection, clustering, layout). Machine-specific values stay in `.env`.
+
+```bash
+cp pipeline/runs/pilot.toml pipeline/runs/my-run.toml   # edit name, [sample], [projection], ...
+cd pipeline && uv run python scripts/run.py my-run      # writes data/derived/my-run/
+cd .. && ATLAS_RUN=my-run npm run dev                   # shows that run in the app
+```
+
+`npm run dev` copies `data/derived/` into the app first (`frontend/public/atlas`, git-ignored). Without `ATLAS_RUN` it shows `pilot`. Run files are strictly validated, so a mistyped key fails with a message. The output contract is described in [docs/architecture.md](docs/architecture.md).
 
 ## Documentation
 
