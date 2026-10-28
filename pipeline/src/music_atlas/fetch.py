@@ -125,6 +125,18 @@ def ensure_metadata_repo(data_dir: Path, log: Log = print) -> None:
         ) from error
 
 
+def missing_archives(data_dir: Path) -> list[str]:
+    """Names of feature archives absent from disk (a cheap check, no hashing)."""
+    checksum_path = repo_dir(data_dir) / CHECKSUM_FILE
+    if not checksum_path.is_file():
+        raise FileNotFoundError(
+            f"{checksum_path} not found; run the data download first"
+        )
+    names = parse_checksums(checksum_path.read_text(encoding="utf-8"))
+    directory = features_dir(data_dir)
+    return sorted(name for name in names if not (directory / name).is_file())
+
+
 def fetch_archives(
     data_dir: Path,
     *,

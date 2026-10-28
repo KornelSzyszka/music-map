@@ -28,6 +28,7 @@ from music_atlas.features import (
     read_features,
     standardize,
 )
+from music_atlas.fetch import missing_archives
 from music_atlas.ingest import SubsetSpec, load_tracks
 
 TOP_GENRES = 12
@@ -39,6 +40,13 @@ def main() -> None:
     out = parser.parse_args().out
 
     data_dir = get_data_dir()
+    missing = missing_archives(data_dir)
+    if missing:
+        # A partial feature set would silently change every statistic.
+        raise SystemExit(
+            f"{len(missing)} feature archives are missing (first: {missing[0]}); "
+            "run `npm run data` to download them"
+        )
     tracks = load_tracks(data_dir, SubsetSpec()).set_index("id")
     frame = read_features(features_dir(data_dir), ACOUSTIC_V1)
     frame = frame[frame["id"].isin(tracks.index)].reset_index(drop=True)

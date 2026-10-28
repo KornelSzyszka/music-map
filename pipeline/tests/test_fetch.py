@@ -16,6 +16,7 @@ from music_atlas.fetch import (
     download_archive,
     ensure_metadata_repo,
     fetch_archives,
+    missing_archives,
     parse_checksums,
     sha256_file,
 )
@@ -155,3 +156,14 @@ def test_url_errors_are_retried_then_reported(monkeypatch, data_dir):
     monkeypatch.setattr("music_atlas.fetch.urllib.request.urlopen", boom)
     report = fetch_archives(data_dir, base_url="http://example.invalid", log=quiet)
     assert report.failed == ["a.tar.gz"] and len(calls) == 3
+
+
+def test_missing_archives_lists_names_without_hashing(data_dir, server):
+    assert missing_archives(data_dir) == ["a.tar.gz"]
+    fetch_archives(data_dir, base_url=server.as_uri(), log=quiet)
+    assert missing_archives(data_dir) == []
+
+
+def test_missing_archives_needs_the_checksum_list(tmp_path):
+    with pytest.raises(FileNotFoundError, match="data download"):
+        missing_archives(tmp_path)
