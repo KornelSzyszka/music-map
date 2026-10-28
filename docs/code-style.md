@@ -5,6 +5,7 @@ Rules for how code in this repository looks and is organised. They apply to huma
 ## Language
 
 - Everything in the repository is written in **English**: identifiers, comments, docstrings, documentation, test names, commit messages.
+- Examples in documentation (JSON, configuration, code) are laid out for reading: one field or statement per line, nested objects indented. Keep a short list or a small flat object on one line.
 - Private study notes live outside the repository (separate notes vault). Do not add Obsidian files, wikilinks or editor state here.
 
 ## Principles
