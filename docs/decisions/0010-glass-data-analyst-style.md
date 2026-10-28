@@ -10,7 +10,7 @@ ADR 0008 chose a flat neutral style and rejected glass effects. After seeing the
 
 ## Decision
 
-- Glass panels frame the data: translucent fill, 1 px rim, a faint inner highlight along the top edge, a background blur of about 14 px over a very soft page gradient. The map and the feature graph sit on a solid surface and are never covered by glass. No glow and no outer shadows.
+- Glass panels frame the data: translucent fill, 1 px rim, a faint inner highlight along the top edge, a background blur of about 14 px over the page background. The map and the feature graph sit on a solid surface and are never covered by glass. No glow; outer shadows only under open dropdown lists (see the update below).
 - Monospace for section labels (small uppercase), values, counts and identifiers; system sans for text.
 - The Map tab has three zones: the map on the left; a permanent selected-track panel on the right that keeps its shape (labels with em dashes) when nothing is selected; the legend and an always-visible control bar under the map. The search field and the visible count sit above the map. The Features tab follows the same shape.
 - Details are in `docs/design.md`, which this decision supersedes where it differs from ADR 0008 (glass, panel radius, layout of the side panel).

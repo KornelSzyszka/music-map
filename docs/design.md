@@ -50,7 +50,7 @@ The Map has four colour modes. The default is **None**: every track has the same
 
 ## 4. Glass, type, motion
 
-- **Glass is chrome, never data.** Panels that frame the data (the selected-track panel, the control bar, legends, the feature detail) are glass: a translucent `--glass` fill, a 1 px `--rim`, a faint inner highlight along the top edge and a background blur of about 14 px over a very soft page gradient. The map and graph themselves sit on a solid `--surface` and are never covered by glass. No glow, no outer shadow, no coloured gradient.
+- **Glass is chrome, never data.** Panels that frame the data (the selected-track panel, the control bar, legends, the feature detail) are glass: a translucent `--glass` fill, a 1 px `--rim`, a faint inner highlight along the top edge and a background blur of about 14 px over the ambient background below. The map and graph themselves sit on a solid `--surface` and are never covered by glass. No glow; the only outer shadow is the soft one under an open dropdown list.
 - Where `backdrop-filter` is not supported the panel falls back to a solid `--surface`.
 - Radius 6 px for controls, 10 px for panels, 1 px lines. Controls are `--glass-strong` fields with a `--rim` edge.
 - **One face for the chrome.** Every control (buttons, tabs, chips, inputs, dropdown triggers and lists, legends, counts) is monospace at 12 px. The system sans is used only for content: track titles, artist names, neighbour titles and the page text. Section labels are small caps in monospace (10 px, uppercase, wide letter-spacing, `--muted`); values, distances and identifiers use tabular numerals. No control may fall back to the browser's default font.
