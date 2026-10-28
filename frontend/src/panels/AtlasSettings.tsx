@@ -41,7 +41,7 @@ export default function AtlasSettings({ store }: { store: AtlasStore }) {
   }
 
   return (
-    <section id="atlas-settings" className="settings" aria-label="Settings">
+    <section id="atlas-settings" className="settings glass" aria-label="Settings">
       <div className="setting">
         <span className="setting-label">Colour</span>
         <select aria-label="Colour by" value={colourMode}

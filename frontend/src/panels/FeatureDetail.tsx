@@ -29,7 +29,18 @@ interface Props {
 }
 
 export default function FeatureDetail({ graph, feature, state, dispatch, sampleState }: Props) {
-  if (!feature) return null
+  if (!feature) {
+    return (
+      <aside className="feature-detail glass" aria-label="Selected feature">
+        <h2>—</h2>
+        <dl className="fields">
+          {['Median', 'Middle half', 'Range', 'Skew', 'Genre separation'].map((label) => (
+            <div key={label}><dt>{label}</dt><dd>—</dd></div>
+          ))}
+        </dl>
+      </aside>
+    )
+  }
   const labels = new Map(graph.features.map((item) => [item.id, item.label]))
   const related = [...neighboursOf(graph, feature.id)]
     .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
@@ -42,7 +53,7 @@ export default function FeatureDetail({ graph, feature, state, dispatch, sampleS
   const tabId = (tab: DetailTab): string => `feature-tab-${tab}`
 
   return (
-    <aside className="feature-detail" aria-live="polite">
+    <aside className="feature-detail glass" aria-label="Selected feature" aria-live="polite">
       <h2>{feature.label}</h2>
       <p className="muted">
         <span className={`swatch family-${feature.family}`} aria-hidden="true" />

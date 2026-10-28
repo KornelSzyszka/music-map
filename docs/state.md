@@ -20,6 +20,8 @@ Skeleton with verified tooling; projection core reviewed by Codex (5 findings, 4
 
 - Hierarchical layout (ADR 0009, proposed): `pipeline/runs/pilot-hier.toml` places clusters by feature-space distance (Spearman 0.93 vs 0.77) and arranges tracks inside; continuity drops from 0.93 to 0.88. The global UMAP stays the default. Unclustered tracks are tinted with their nearest cluster in the Cluster colour mode.
 
+- Style (ADR 0010, `docs/design.md`): glass panels around the data, monospaced labels and values, permanent selected-track panel on the right, legend and control bar under the map; the Features tab has the same shape.
+
 ## Not done / limits
 
 - `project`, `evaluate`, `export` are implemented and tested on synthetic data (27 tests); `features` is implemented (96-feature set `acoustic-v1`, ADR 0006 proposed); `ingest` is implemented (Codex) and verified on the real files (55 609 tracks).

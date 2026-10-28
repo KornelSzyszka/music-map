@@ -30,14 +30,14 @@ export default function AtlasView({ baseUrl = './fixtures' }: { baseUrl?: string
   if (status === 'idle' || status === 'loading') return <p role="status">Loading…</p>
   if (status === 'error') return <p role="alert">{error}</p>
   return (
-    <section aria-label="Music atlas" className="atlas-layout">
-      <AtlasMap store={store} />
-      <aside className="side-panel">
+    <section aria-label="Music atlas" className="atlas-view">
+      <div className="atlas-column">
         <AtlasToolbar store={store} />
-        {settingsOpen ? <AtlasSettings store={store} /> : null}
+        <AtlasMap store={store} />
         <Legend store={store} />
-        <TrackDetails store={store} />
-      </aside>
+        {settingsOpen ? <AtlasSettings store={store} /> : null}
+      </div>
+      <TrackDetails store={store} />
     </section>
   )
 }

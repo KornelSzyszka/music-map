@@ -47,7 +47,7 @@ export default function App() {
   return (
     <main className="app">
       <header className="app-header">
-        <h1>Music Atlas</h1>
+        <h1 className="brand">Music Atlas</h1>
         <nav aria-label="Views">
           {TABS.map(({ id, label }) => (
             <button key={id} type="button" className="tab" aria-pressed={tab === id} onClick={() => setTab(id)}>

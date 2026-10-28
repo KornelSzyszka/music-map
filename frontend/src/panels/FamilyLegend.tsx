@@ -12,7 +12,7 @@ const KEY_WIDTH = 2 * MAX_RADIUS + MIN_RADIUS * 2 + 12
 /** Colour is the feature family and size is genre separation; a family can be hidden by clicking it. */
 export default function FamilyLegend({ graph, hidden, onToggle }: Props) {
   return (
-    <section className="legend family-legend" aria-label="Legend">
+    <section className="legend family-legend glass" aria-label="Legend">
       <ul>
         {FEATURE_FAMILIES.map((family) => {
           const count = graph.features.filter((feature) => feature.family === family).length

@@ -80,7 +80,7 @@ export default function AtlasMap({ store }: { store: AtlasStore }) {
     if (!canvas || !context || !atlas) return
     const styles = getComputedStyle(canvas)
     const ink = styles.getPropertyValue('--text').trim() || '#111111'
-    const halo = styles.getPropertyValue('--canvas').trim() || '#ffffff'
+    const halo = styles.getPropertyValue('--surface').trim() || '#ffffff'
     const colourOf = slotColours(styles)
     context.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT)
     const radius = Math.min(6, 2.2 + Math.log2(Math.max(1, view.scale / fitScale)))

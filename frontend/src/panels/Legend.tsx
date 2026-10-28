@@ -16,7 +16,7 @@ export default function Legend({ store }: { store: AtlasStore }) {
   if (legend.kind === 'none') return null
   if (legend.kind === 'scale') {
     return (
-      <section className="legend" aria-label={`Legend: ${featureLabel(legend.feature)}`}>
+      <section className="legend glass" aria-label={`Legend: ${featureLabel(legend.feature)}`}>
         <span className="legend-title">{featureLabel(legend.feature)}</span>
         <div className="scale" style={{ background: GRADIENT }} role="img" aria-label={`${formatBound(legend.min)} to ${formatBound(legend.max)}`} />
         <div className="scale-ends"><span>{formatBound(legend.min)}</span><span>{formatBound(legend.max)}</span></div>
@@ -24,7 +24,7 @@ export default function Legend({ store }: { store: AtlasStore }) {
     )
   }
   return (
-    <section className="legend" aria-label="Legend">
+    <section className="legend glass" aria-label="Legend">
       <ul>
         {legend.entries.map((entry) => (
           <li key={`${entry.slot}:${entry.label}`}>

@@ -75,7 +75,7 @@ export function createAtlasStore() {
     filters: EMPTY_FILTERS,
     colourMode: 'none',
     colourFeature: null,
-    settingsOpen: false,
+    settingsOpen: true,
     derived: EMPTY_DERIVED,
   }
   const listeners = new Set<() => void>()
