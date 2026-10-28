@@ -34,7 +34,7 @@ Keep the global UMAP map as the default. The hierarchical layout stays available
 
 ## Alternatives and open question
 
-- Showing both layouts in one export with a Layout switch in Settings (two position pairs per track) would let the user compare without rebuilding. Not done; it changes the contract and needs the user's decision.
+- Showing both layouts in one export with a Layout switch in Settings (two position pairs per track) would let the user compare without rebuilding. Done (schema 0.5): a run with `alternate_layout` exports `alt_x`/`alt_y`, and the Layout dropdown in Settings swaps between them. The default run exports UMAP first and the hierarchical layout as the alternative.
 - Larger or size-weighted discs, or laying out unclustered tracks separately from their home cluster, were not tried.
 
 ## Participants and acceptance evidence

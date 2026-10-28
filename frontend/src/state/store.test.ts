@@ -115,3 +115,31 @@ test('opens and closes the settings panel without recomputing anything', () => {
   expect(store.getSnapshot().settingsOpen).toBe(true)
   expect(store.getSnapshot().derived).toBe(derived)
 })
+
+test('switches between two layouts, keeping the selection, filters and colours', () => {
+  const store = createAtlasStore()
+  const input = atlasInput()
+  store.setAtlas(validateAtlas({
+    ...input,
+    tracks: input.tracks.map((track, index) => ({ ...track, alt_x: 50 + index, alt_y: 60 + index })),
+    clusters: input.clusters.map((item, index) => ({ ...item, alt_x: 70 + index, alt_y: 80 + index })),
+  }))
+  store.setSelection('test:2')
+  store.setColourMode('cluster')
+  const before = store.getSnapshot().derived
+  store.setLayout('alternate')
+  const after = store.getSnapshot()
+  expect(after.layout).toBe('alternate')
+  expect(after.atlas?.tracks[1]).toMatchObject({ x: 51, y: 61 })
+  expect(after.derived.selectedTrack).toMatchObject({ id: 'test:2', x: 51, y: 61 })
+  expect(after.derived.slots).toBe(before.slots)
+  expect(after.derived.mask).toBe(before.mask)
+  store.setLayout('primary')
+  expect(store.getSnapshot().atlas?.tracks[1]).toMatchObject({ x: 4, y: 3 })
+})
+
+test('ignores a layout change when the export has no alternate layout, and resets on a new atlas', () => {
+  const { store, atlas } = loaded()
+  store.setLayout('alternate')
+  expect(store.getSnapshot()).toMatchObject({ layout: 'primary', atlas })
+})

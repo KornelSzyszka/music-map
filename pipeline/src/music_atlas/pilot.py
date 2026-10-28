@@ -41,7 +41,7 @@ from music_atlas.project import (
     reduce_pca,
 )
 
-SCHEMA_VERSION = "0.4"
+SCHEMA_VERSION = "0.5"
 DISTANCE_METRIC = "euclidean on clipped, standardised features"
 LIBRARIES = ("numpy", "pandas", "scikit-learn", "umap-learn")
 # Raw values exported with every track for the details panel.
@@ -54,6 +54,7 @@ DISPLAY_FEATURES = {
     "key_strength": "tonal.key_strength",
 }
 FEATURE_DECIMALS = 4
+LAYOUTS = ("umap", "hierarchical")
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,8 @@ class PilotParams:
     umap_min_dist: float = 0.1
     # "umap": the global map. "hierarchical": clusters first, then their tracks.
     layout: str = "umap"
+    # A second layout exported next to the first (alt_x, alt_y); None for none.
+    alternate_layout: str | None = None
     hierarchy_fill: float = 0.2
     cluster_dims: int = 10
     cluster_neighbors: int = 15
@@ -91,6 +94,7 @@ class AtlasBuild:
     neighbor_distance: np.ndarray
     manifest: AtlasMeta
     quality: dict = field(default_factory=dict)
+    alt: np.ndarray | None = None
 
 
 def _quality(
@@ -160,15 +164,20 @@ def build_atlas(
     neighbor_index, neighbor_distance = knn(Z, params.knn_k)
     # Every track gets a home cluster: its own, or the one it is closest to.
     home = assign_to_clusters(Z, labels, params.assign_k)
+    wanted = {params.layout, params.alternate_layout} - {None}
+    unknown = wanted - set(LAYOUTS)
+    if unknown:
+        raise ValueError(f"unknown layout {sorted(unknown)!r}; known: {LAYOUTS}")
+    if params.alternate_layout == params.layout:
+        raise ValueError("alternate_layout must differ from layout")
     maps = {"umap": umap}
-    if params.layout == "hierarchical":
+    if "hierarchical" in wanted:
         hierarchy = HierarchyParams(
             assign_k=params.assign_k, fill=params.hierarchy_fill, seed=params.seed
         )
         maps["hierarchical"] = hierarchical_layout(Z, labels, umap, hierarchy).positions
-    elif params.layout != "umap":
-        raise ValueError(f"unknown layout {params.layout!r}")
-    Y = maps.get("hierarchical", umap)
+    Y = maps[params.layout]
+    alt = maps[params.alternate_layout] if params.alternate_layout else None
     quality = _quality(Z, maps, params)
     joined["home_cluster_id"] = home
 
@@ -207,11 +216,13 @@ def build_atlas(
                 for name, positions in maps.items()
             },
             "layout": params.layout,
+            "alternate_layout": params.alternate_layout,
         },
     }
     return AtlasBuild(
         tracks=joined,
         Y=Y,
+        alt=alt,
         labels=labels,
         neighbor_index=neighbor_index,
         neighbor_distance=neighbor_distance,
@@ -222,8 +233,8 @@ def build_atlas(
 
 def write_atlas(out: Path, build: AtlasBuild) -> None:
     """Write manifest, tracks, clusters and neighbours of an atlas build."""
-    write_tracks(out, build.tracks, build.Y, build.labels)
-    write_clusters(out, build.tracks, build.Y, build.labels)
+    write_tracks(out, build.tracks, build.Y, build.labels, build.alt)
+    write_clusters(out, build.tracks, build.Y, build.labels, build.alt)
     write_neighbors(
         out, list(build.tracks["id"]), build.neighbor_index, build.neighbor_distance
     )

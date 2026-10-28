@@ -19,6 +19,9 @@ set = "acoustic-v1"         # see docs/decisions/0006-feature-set-acoustic-v1.md
 pca_components = 40
 umap_neighbors = 15
 umap_min_dist = 0.1
+layout = "umap"                 # the map shown first
+alternate_layout = "hierarchical"  # exported too, so the app can switch (omit for none)
+hierarchy_fill = 0.2            # share of the area spanned by the cluster centres that discs may cover
 
 [clusters]                  # HDBSCAN on a separate 10-D UMAP space (see ADR 0007)
 space_dims = 10

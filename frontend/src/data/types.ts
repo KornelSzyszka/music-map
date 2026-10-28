@@ -5,6 +5,9 @@ export interface AtlasSummary {
   dropped_without_features: number
   clusters: number
   clustered_share: number
+  /** Schema 0.5: the layout behind x and y, and the one behind alt_x and alt_y. */
+  layout?: string
+  alternate_layout?: string | null
 }
 
 /** Neighbourhood preservation: method -> k -> metric -> value in [0, 1]. */
@@ -32,6 +35,9 @@ export interface Track {
   artist_id?: string | null
   x: number
   y: number
+  /** Schema 0.5: position in the alternate layout; present on every track or on none. */
+  alt_x?: number
+  alt_y?: number
   cluster_id: number | null
   /** Schema 0.4 and later: the cluster the track belongs to or is closest to. */
   home_cluster_id?: number | null
@@ -48,6 +54,8 @@ export interface Cluster {
   size: number
   x: number
   y: number
+  alt_x?: number
+  alt_y?: number
   top_tags: string[]
 }
 

@@ -2,6 +2,7 @@ import type { Atlas } from '../data/loader'
 import type { Track } from '../data/types'
 import { colourScheme, type ColourMode, type Legend } from '../derive/colouring'
 import { EMPTY_FILTERS, visibilityMask, visibleClusters, type Filters } from '../derive/filters'
+import { hasAlternateLayout, withLayout, type LayoutChoice } from '../derive/layouts'
 import { artistOptions, clusterOptions, featureKeys, tagOptions, type Option } from '../derive/options'
 
 export interface View {
@@ -35,6 +36,8 @@ export interface AtlasState {
   /** Feature used by the Feature colour mode; null until one is chosen. */
   readonly colourFeature: string | null
   readonly settingsOpen: boolean
+  /** The layout shown; the alternate one exists only when the export carries it. */
+  readonly layout: LayoutChoice
   readonly derived: Derived
 }
 
@@ -76,6 +79,7 @@ export function createAtlasStore() {
     colourMode: 'none',
     colourFeature: null,
     settingsOpen: true,
+    layout: 'primary',
     derived: EMPTY_DERIVED,
   }
   const listeners = new Set<() => void>()
@@ -83,6 +87,15 @@ export function createAtlasStore() {
   function publish(next: AtlasState): void {
     state = next
     listeners.forEach((listener) => listener())
+  }
+
+  function publishLayout(choice: LayoutChoice): void {
+    if (!state.atlas || choice === state.layout) return
+    if (choice === 'alternate' && !hasAlternateLayout(state.atlas)) return
+    // Both layouts are the same swap of the position pairs, so the current atlas is the source either way.
+    const atlas = withLayout(state.atlas, 'alternate')
+    const selectedTrack = atlas.tracks.find((track) => track.id === state.selection) ?? null
+    publish({ ...state, atlas, layout: choice, derived: { ...state.derived, selectedTrack } })
   }
 
   function scheme(atlas: Atlas | null, mode: ColourMode, feature: string | null, filters: Filters) {
@@ -112,6 +125,7 @@ export function createAtlasStore() {
       publish({
         ...state,
         atlas,
+        layout: 'primary',
         status: 'ready',
         error: null,
         selection: null,
@@ -159,6 +173,7 @@ export function createAtlasStore() {
           : { slots: state.derived.slots, legend: state.derived.legend }
       publish({ ...state, colourFeature, derived: { ...state.derived, ...coloured } })
     },
+    setLayout: publishLayout,
     setSettingsOpen(settingsOpen: boolean) {
       publish({ ...state, settingsOpen })
     },

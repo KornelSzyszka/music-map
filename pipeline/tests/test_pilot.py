@@ -1,5 +1,6 @@
 import gzip
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -95,7 +96,7 @@ def test_quality_is_reported_for_the_map_and_the_baseline(tracks, features):
 
 def test_manifest_records_parameters_versions_and_metric(tracks, features):
     manifest = build_atlas(tracks, features, SPEC, PARAMS, "test-v1").manifest
-    assert manifest["schema_version"] == "0.4"
+    assert manifest["schema_version"] == "0.5"
     assert manifest["parameters"]["min_cluster_size"] == 10
     assert set(manifest["library_versions"]) == {
         "numpy",
@@ -126,3 +127,35 @@ def test_write_atlas_creates_the_four_contract_files(tracks, features, tmp_path)
     assert len(read_gzip_json(tmp_path / NEIGHBORS_FILE)) == len(tracks)
     clusters = read_gzip_json(tmp_path / CLUSTERS_FILE)
     assert clusters and all(c["top_tags"] for c in clusters)
+
+
+def test_an_alternate_layout_is_exported_next_to_the_first(tracks, features, tmp_path):
+    params = replace(PARAMS, alternate_layout="hierarchical")
+    build = build_atlas(tracks, features, SPEC, params, "test-v1")
+    assert build.alt is not None and build.alt.shape == build.Y.shape
+    assert not np.allclose(build.alt, build.Y)
+    assert build.manifest["summary"]["alternate_layout"] == "hierarchical"
+    write_atlas(tmp_path, build)
+    first = read_gzip_json(tmp_path / TRACKS_FILE)[0]
+    assert {"x", "y", "alt_x", "alt_y"} <= set(first)
+    assert all(
+        "alt_x" in c and "alt_y" in c for c in read_gzip_json(tmp_path / CLUSTERS_FILE)
+    )
+
+
+def test_without_an_alternate_layout_no_alt_fields_are_written(
+    tracks, features, tmp_path
+):
+    write_atlas(tmp_path, build_atlas(tracks, features, SPEC, PARAMS, "test-v1"))
+    assert "alt_x" not in read_gzip_json(tmp_path / TRACKS_FILE)[0]
+
+
+def test_the_alternate_layout_must_differ_and_be_known(tracks, features):
+    with pytest.raises(ValueError, match="must differ"):
+        build_atlas(
+            tracks, features, SPEC, replace(PARAMS, alternate_layout="umap"), "t"
+        )
+    with pytest.raises(ValueError, match="unknown layout"):
+        build_atlas(
+            tracks, features, SPEC, replace(PARAMS, alternate_layout="grid"), "t"
+        )

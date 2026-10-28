@@ -134,3 +134,18 @@ test('accepts schema 0.4 with the home cluster of a track', () => {
   expect(atlas.tracks[2].home_cluster_id).toBe(1)
   expect(atlas.tracks[0].home_cluster_id).toBeUndefined()
 })
+
+describe('alternate layout fields', () => {
+  test('accepts a second position on tracks and clusters', () => {
+    const input = atlasInput()
+    input.manifest.schema_version = '0.5'
+    input.tracks[0] = { ...input.tracks[0], alt_x: 1, alt_y: 2 }
+    expect(validateAtlas(input).tracks[0]).toMatchObject({ alt_x: 1, alt_y: 2 })
+  })
+
+  test('rejects a half-written position pair', () => {
+    const input = atlasInput()
+    input.tracks[0] = { ...input.tracks[0], alt_x: 1 }
+    expect(() => validateAtlas(input)).toThrow('tracks[0].alt_y')
+  })
+})

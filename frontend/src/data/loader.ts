@@ -60,7 +60,7 @@ export function strings(value: unknown, path: string): string[] {
   return array(value, path).map((item, index) => string(item, `${path}[${index}]`))
 }
 
-const SUPPORTED_SCHEMAS = ['0.1', '0.2', '0.3', '0.4']
+const SUPPORTED_SCHEMAS = ['0.1', '0.2', '0.3', '0.4', '0.5']
 
 function summary(value: unknown): AtlasSummary {
   const data = record(value, 'manifest.summary')
@@ -69,6 +69,8 @@ function summary(value: unknown): AtlasSummary {
     dropped_without_features: integer(data.dropped_without_features, 'manifest.summary.dropped_without_features'),
     clusters: integer(data.clusters, 'manifest.summary.clusters'),
     clustered_share: number(data.clustered_share, 'manifest.summary.clustered_share'),
+    ...(typeof data.layout === 'string' ? { layout: data.layout } : {}),
+    ...(data.alternate_layout === undefined ? {} : { alternate_layout: data.alternate_layout === null ? null : string(data.alternate_layout, 'manifest.summary.alternate_layout') }),
   }
 }
 
@@ -103,6 +105,13 @@ function manifest(value: unknown): AtlasManifest {
   }
 }
 
+/** The alternate layout is all or nothing: one coordinate alone is a broken export. */
+function altPosition(data: Record<string, unknown>, path: string): { alt_x?: number; alt_y?: number } {
+  const present = [data.alt_x, data.alt_y].filter((item) => item !== undefined && item !== null)
+  if (present.length === 0) return {}
+  return { alt_x: number(data.alt_x, `${path}.alt_x`), alt_y: number(data.alt_y, `${path}.alt_y`) }
+}
+
 function track(value: unknown, index: number): Track {
   const path = `tracks[${index}]`
   const data = record(value, path)
@@ -116,6 +125,7 @@ function track(value: unknown, index: number): Track {
       : { artist_id: identifier(data.artist_id, `${path}.artist_id`) }),
     x: number(data.x, `${path}.x`),
     y: number(data.y, `${path}.y`),
+    ...altPosition(data, path),
     cluster_id: data.cluster_id === null ? null : integer(data.cluster_id, `${path}.cluster_id`),
     ...(data.home_cluster_id === undefined || data.home_cluster_id === null
       ? {}
@@ -139,6 +149,7 @@ function cluster(value: unknown, index: number): Cluster {
     size: integer(data.size, `${path}.size`),
     x: number(data.x, `${path}.x`),
     y: number(data.y, `${path}.y`),
+    ...altPosition(data, path),
     top_tags: strings(data.top_tags, `${path}.top_tags`),
   }
 }

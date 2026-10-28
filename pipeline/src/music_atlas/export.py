@@ -79,11 +79,30 @@ def write_manifest(out: Path, meta: AtlasMeta) -> None:
     (out / MANIFEST_FILE).write_text(_dumps(meta, indent=2), encoding="utf-8")
 
 
+def _alt_fields(alt: np.ndarray | None, index: int) -> dict[str, float]:
+    """Positions of the alternate layout; nothing when there is none."""
+    if alt is None:
+        return {}
+    return {
+        "alt_x": round(float(alt[index][0]), COORDINATE_DECIMALS),
+        "alt_y": round(float(alt[index][1]), COORDINATE_DECIMALS),
+    }
+
+
 def write_tracks(
-    out: Path, df: pd.DataFrame, Y: np.ndarray, labels: np.ndarray
+    out: Path,
+    df: pd.DataFrame,
+    Y: np.ndarray,
+    labels: np.ndarray,
+    alt: np.ndarray | None = None,
 ) -> None:
-    """Write track records with projected positions and cluster ids."""
+    """Write track records with projected positions and cluster ids.
+
+    ``alt`` is an optional second layout (schema 0.5), exported as alt_x and alt_y.
+    """
     _check_lengths(tracks=len(df), positions=len(Y), labels=len(labels))
+    if alt is not None:
+        _check_lengths(tracks=len(df), alternate_positions=len(alt))
     tracks = [
         {
             "id": row.id,
@@ -99,9 +118,10 @@ def write_tracks(
             "moods": list(row.moods),
             "features": dict(getattr(row, "features", None) or {}),
             "source_url": getattr(row, "source_url", None),
+            **_alt_fields(alt, index),
         }
-        for row, (x, y), label in zip(
-            df.itertuples(index=False), Y, labels, strict=True
+        for index, (row, (x, y), label) in enumerate(
+            zip(df.itertuples(index=False), Y, labels, strict=True)
         )
     ]
     _write_gzip_json(out / TRACKS_FILE, tracks)
@@ -130,8 +150,22 @@ def _describing_tags(
     return [tag for _, _, tag in scored[:TOP_TAG_COUNT]]
 
 
+def _alt_centroid(alt: np.ndarray | None, members: np.ndarray) -> dict[str, float]:
+    if alt is None:
+        return {}
+    centroid = alt[members].mean(axis=0)
+    return {
+        "alt_x": round(float(centroid[0]), COORDINATE_DECIMALS),
+        "alt_y": round(float(centroid[1]), COORDINATE_DECIMALS),
+    }
+
+
 def write_clusters(
-    out: Path, df: pd.DataFrame, Y: np.ndarray, labels: np.ndarray
+    out: Path,
+    df: pd.DataFrame,
+    Y: np.ndarray,
+    labels: np.ndarray,
+    alt: np.ndarray | None = None,
 ) -> None:
     """Write one record per cluster (noise excluded) with centroid and top tags.
 
@@ -156,6 +190,7 @@ def write_clusters(
                 "x": round(float(centroid[0]), COORDINATE_DECIMALS),
                 "y": round(float(centroid[1]), COORDINATE_DECIMALS),
                 "top_tags": top_tags,
+                **_alt_centroid(alt, members),
             }
         )
     _write_gzip_json(out / CLUSTERS_FILE, clusters)
