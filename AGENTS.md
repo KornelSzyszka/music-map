@@ -32,6 +32,7 @@ Details: [roles and routing](docs/agents/roles-and-routing.md), [memory policy](
 - Do **not** commit, push, publish, change git remotes or rewrite history unless the user explicitly asks for that action in the current task.
 - Do not download datasets or audio unless the task says so. Never commit data, audio or secrets. Downloaded files are untrusted input: validate, never execute.
 - Do not add notes-vault files (Obsidian config, canvases, wikilinks) to this repository. Private notes live in a separate vault.
+- Do not put machine-local paths or references to private projects in the repository. Design rules are self-contained in `docs/design.md`; follow them for any UI change, including its text policy.
 - Run the checks from `CONTRIBUTING.md` for the part you changed and report exact results. Do not claim something works if you did not run it; list what could not run.
 - Completion needs the artifact and evidence, not a worker's assertion. A review by the author is self-review, not independent review.
 - Finish with: result, changed files, checks run, limitations, next action. Update `docs/state.md` within the authorised scope.

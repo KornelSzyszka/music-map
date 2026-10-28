@@ -81,6 +81,7 @@ That is all the project uses: track metadata and tags from the repository, and t
 - [docs/code-style.md](docs/code-style.md): how code is written and checked
 - [docs/patterns.md](docs/patterns.md): recurring design solutions
 - [docs/state.md](docs/state.md) and [docs/roadmap.md](docs/roadmap.md): where the project stands and the staged plan
+- [docs/design.md](docs/design.md): interface and colour rules
 - [docs/datasets.md](docs/datasets.md): what data is used, where it comes from, verified facts
 - [docs/decisions/](docs/decisions/) and [docs/tasks/](docs/tasks/): decisions and task briefs
 - [docs/agents/](docs/agents/): how Claude, Codex and the user work together
