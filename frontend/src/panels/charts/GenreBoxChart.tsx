@@ -15,7 +15,7 @@ interface Props {
 
 export default function GenreBoxChart({ feature, quantiles, highlighted }: Props) {
   const rows = boxRows(feature, quantiles)
-  if (rows.length === 0) return <p className="muted">No genre profile for this feature.</p>
+  if (rows.length === 0) return null
   const low = Math.min(...rows.map((row) => row.p10))
   const high = Math.max(...rows.map((row) => row.p90))
   const span = high - low || 1
@@ -52,7 +52,7 @@ export default function GenreBoxChart({ feature, quantiles, highlighted }: Props
         <text className="axis-label" x={LABEL} y={rows.length * ROW + 14}>{formatNumber(low)}</text>
         <text className="axis-label" x={WIDTH - 8} y={rows.length * ROW + 14} textAnchor="end">{formatNumber(high)}</text>
       </svg>
-      <figcaption>Whisker: 10th to 90th percentile. Box: middle half. Tick: median. Single-genre tracks only.</figcaption>
+      <figcaption>p10–p90 · middle half · median</figcaption>
     </figure>
   )
 }

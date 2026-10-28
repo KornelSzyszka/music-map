@@ -29,15 +29,7 @@ interface Props {
 }
 
 export default function FeatureDetail({ graph, feature, state, dispatch, sampleState }: Props) {
-  if (!feature) {
-    return (
-      <aside className="feature-detail">
-        <p className="muted">
-          Select a feature to see its distribution, how genres and tags differ on it, and how it compares with another feature.
-        </p>
-      </aside>
-    )
-  }
+  if (!feature) return null
   const labels = new Map(graph.features.map((item) => [item.id, item.label]))
   const related = [...neighboursOf(graph, feature.id)]
     .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))

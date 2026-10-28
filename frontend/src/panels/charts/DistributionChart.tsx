@@ -25,9 +25,7 @@ export default function DistributionChart({ feature }: { feature: FeatureNode })
         <text className="axis-label" x={WIDTH} y={HEIGHT + 14} textAnchor="end">{formatNumber(high)}</text>
         <text className="axis-label" x={median} y={HEIGHT + 14} textAnchor="middle">median {formatNumber(stats.median)}</text>
       </svg>
-      <figcaption>
-        Plotted between the 0.5th and 99.5th percentile; {histogram.below} tracks fall below and {histogram.above} above.
-      </figcaption>
+      <figcaption>{histogram.below} below · {histogram.above} above</figcaption>
     </figure>
   )
 }

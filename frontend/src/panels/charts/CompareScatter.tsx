@@ -28,11 +28,11 @@ export default function CompareScatter({ graph, feature, otherId, sampleState, h
   const other = graph.features.find((item) => item.id === otherId) ?? null
   const options = graph.features.filter((item) => item.id !== feature.id)
 
-  if (sampleState.status === 'loading') return <p role="status" className="muted">Loading the track sample…</p>
+  if (sampleState.status === 'loading') return <p role="status" className="muted">Loading…</p>
   if (sampleState.status === 'error' || !sampleState.sample) {
     return <p role="alert">Comparison unavailable: {sampleState.error ?? 'no sample loaded'}</p>
   }
-  if (!other) return <p className="muted">No other feature to compare with.</p>
+  if (!other) return null
 
   const points = scatterPoints(sampleState.sample, feature.id, other.id)
   const xAxis = robustAxis(points.map((point) => point.x))
@@ -85,10 +85,7 @@ export default function CompareScatter({ graph, feature, otherId, sampleState, h
           {other.label}
         </text>
       </svg>
-      <figcaption>
-        {points.length} sampled tracks, correlation r = {r.toFixed(2)}. Axes cover the 1st to 99th percentile.
-        Coloured: highlighted genres; grey: everything else.
-      </figcaption>
+      <figcaption>n = {points.length} · r = {r.toFixed(2)}</figcaption>
     </figure>
   )
 }

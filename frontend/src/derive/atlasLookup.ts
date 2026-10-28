@@ -22,11 +22,16 @@ export function buildLookup(atlas: Atlas): AtlasLookup {
 }
 
 /** Nearest musical neighbours from the exported feature-space data, never from map distance. */
-export function neighboursOfTrack(lookup: AtlasLookup, id: string, limit: number): NeighbourRow[] {
+export function neighboursOfTrack(
+  lookup: AtlasLookup,
+  id: string,
+  limit: number,
+  isVisible: (trackId: string) => boolean = () => true,
+): NeighbourRow[] {
   const rows: NeighbourRow[] = []
   for (const entry of lookup.neighbours.get(id) ?? []) {
     const track = lookup.tracks.get(entry.id)
-    if (track) rows.push({ track, distance: entry.distance })
+    if (track && isVisible(track.id)) rows.push({ track, distance: entry.distance })
     if (rows.length >= limit) break
   }
   return rows

@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { buildLookup, neighboursOfTrack } from '../derive/atlasLookup'
 import { DEFAULT_LABEL_OPTIONS, layoutLabels } from '../derive/clusterLabels'
-import { nearestPoint, NEUTRAL_COLOUR } from '../derive/tracks'
+import { BASE, GREY, MAX_ARTIST_COLOURS, SEQUENTIAL_BASE, SEQUENTIAL_STEPS, SERIES_SLOTS } from '../derive/colouring'
+import { nearestPoint } from '../derive/tracks'
 import type { AtlasStore } from '../state/store'
 import { useAtlasStore } from '../state/useAtlasStore'
 import { fitView, fromCanvas, MAP_HEIGHT, MAP_WIDTH, panBy, toCanvas, zoomAt } from './geometry'
@@ -12,6 +13,7 @@ const KEY_STEP = 1.2
 const PICK_RADIUS = 10
 const NEIGHBOURS_SHOWN = 10
 const LABEL_FONT = '600 12px system-ui, sans-serif'
+const ALPHA = { grey: 0.35, base: 0.75, colour: 0.9 }
 
 interface Drag {
   startX: number
@@ -27,11 +29,43 @@ function canvasPoint(canvas: HTMLCanvasElement, clientX: number, clientY: number
   return { x: ((clientX - bounds.left) * MAP_WIDTH) / bounds.width, y: ((clientY - bounds.top) * MAP_HEIGHT) / bounds.height }
 }
 
+/** Resolve a colour slot to the current theme's value (tokens live in CSS, see docs/design.md). */
+function slotColours(styles: CSSStyleDeclaration): (slot: number) => string {
+  const read = (name: string): string => styles.getPropertyValue(name).trim()
+  const series = Array.from({ length: SERIES_SLOTS }, (_, index) => read(`--series-${index + 1}`))
+  const sequential = Array.from({ length: SEQUENTIAL_STEPS }, (_, index) => read(`--seq-${index + 1}`))
+  const grey = read('--grey')
+  const base = read('--base')
+  return (slot) => {
+    if (slot === GREY) return grey
+    if (slot === BASE) return base
+    return slot >= SEQUENTIAL_BASE ? sequential[slot - SEQUENTIAL_BASE] : series[slot]
+  }
+}
+
+/** Changes whenever the theme does (explicit override or system preference), so that the canvas repaints. */
+function subscribeTheme(onChange: () => void): () => void {
+  const observer = new MutationObserver(onChange)
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  const media = window.matchMedia('(prefers-color-scheme: dark)')
+  media.addEventListener('change', onChange)
+  return () => {
+    observer.disconnect()
+    media.removeEventListener('change', onChange)
+  }
+}
+
+function themeSignature(): string {
+  return `${document.documentElement.getAttribute('data-theme') ?? 'system'}|${window.matchMedia('(prefers-color-scheme: dark)').matches}`
+}
+
 export default function AtlasMap({ store }: { store: AtlasStore }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drag = useRef<Drag | null>(null)
-  const { atlas, derived, selection, view } = useAtlasStore(store)
+  const { atlas, derived, selection, view, colourMode } = useAtlasStore(store)
+  const theme = useSyncExternalStore(subscribeTheme, themeSignature)
   const lookup = useMemo(() => (atlas ? buildLookup(atlas) : null), [atlas])
+  const indexById = useMemo(() => new Map((atlas?.tracks ?? []).map((track, index) => [track.id, index])), [atlas])
   const fitScale = useMemo(() => fitView(atlas?.tracks ?? []).scale, [atlas])
   const viewRef = useRef(view)
 
@@ -45,33 +79,47 @@ export default function AtlasMap({ store }: { store: AtlasStore }) {
     if (!canvas || !context || !atlas) return
     const styles = getComputedStyle(canvas)
     const ink = styles.getPropertyValue('--text').trim() || '#111111'
-    const halo = styles.getPropertyValue('--surface-raised').trim() || '#ffffff'
+    const halo = styles.getPropertyValue('--canvas').trim() || '#ffffff'
+    const colourOf = slotColours(styles)
     context.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT)
     const radius = Math.min(6, 2.2 + Math.log2(Math.max(1, view.scale / fitScale)))
 
-    // Unclustered tracks first and faint, so that clusters read on top of them.
-    for (const pass of ['background', 'clusters'] as const) {
-      context.globalAlpha = pass === 'background' ? 0.4 : 0.9
+    // Grey tracks first and faint, so that colour and the neutral base read on top of them.
+    for (const pass of ['grey', 'rest'] as const) {
       atlas.tracks.forEach((track, index) => {
         if (!derived.mask[index]) return
-        const isBackground = derived.colours[index] === NEUTRAL_COLOUR
-        if (isBackground !== (pass === 'background')) return
+        const slot = derived.slots[index]
+        if ((slot === GREY) !== (pass === 'grey')) return
         const point = toCanvas(track, view)
         if (point.x < -8 || point.x > MAP_WIDTH + 8 || point.y < -8 || point.y > MAP_HEIGHT + 8) return
+        context.globalAlpha = slot === GREY ? ALPHA.grey : slot === BASE ? ALPHA.base : ALPHA.colour
         context.beginPath()
         context.arc(point.x, point.y, radius, 0, 2 * Math.PI)
-        context.fillStyle = derived.colours[index]
+        context.fillStyle = colourOf(slot)
         context.fill()
+        // Colour never works alone: highlighted artists also get an outline.
+        if (colourMode === 'artist' && slot >= 0 && slot < MAX_ARTIST_COLOURS) {
+          context.globalAlpha = 1
+          context.strokeStyle = ink
+          context.lineWidth = 1
+          context.stroke()
+        }
       })
     }
     context.globalAlpha = 1
 
+    // Neighbour lines and rings follow the visibility mask like the points themselves.
     const selected = derived.selectedTrack
-    if (selected && lookup) {
+    const selectedIndex = selected ? indexById.get(selected.id) : undefined
+    if (selected && lookup && selectedIndex !== undefined && derived.mask[selectedIndex]) {
       const from = toCanvas(selected, view)
       context.strokeStyle = ink
       context.lineWidth = 1
-      for (const { track } of neighboursOfTrack(lookup, selected.id, NEIGHBOURS_SHOWN)) {
+      const visible = (id: string): boolean => {
+        const neighbourIndex = indexById.get(id)
+        return neighbourIndex !== undefined && derived.mask[neighbourIndex] === 1
+      }
+      for (const { track } of neighboursOfTrack(lookup, selected.id, NEIGHBOURS_SHOWN, visible)) {
         const to = toCanvas(track, view)
         context.globalAlpha = 0.35
         context.beginPath()
@@ -92,11 +140,11 @@ export default function AtlasMap({ store }: { store: AtlasStore }) {
     context.font = LABEL_FONT
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    const labels = layoutLabels(atlas.clusters, (point) => toCanvas(point, view), {
-      ...DEFAULT_LABEL_OPTIONS,
-      width: MAP_WIDTH,
-      height: MAP_HEIGHT,
-    })
+    const labels = layoutLabels(
+      atlas.clusters.filter((cluster) => derived.visibleClusters.has(cluster.id)),
+      (point) => toCanvas(point, view),
+      { ...DEFAULT_LABEL_OPTIONS, width: MAP_WIDTH, height: MAP_HEIGHT },
+    )
     for (const label of labels) {
       context.lineWidth = 4
       context.strokeStyle = halo
@@ -104,7 +152,7 @@ export default function AtlasMap({ store }: { store: AtlasStore }) {
       context.fillStyle = ink
       context.fillText(label.text, label.x, label.y)
     }
-  }, [atlas, derived, lookup, selection, view, fitScale])
+  }, [atlas, derived, lookup, indexById, selection, view, fitScale, theme, colourMode])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -175,8 +223,6 @@ export default function AtlasMap({ store }: { store: AtlasStore }) {
         else return
         event.preventDefault()
       }}
-    >
-      Your browser must support Canvas 2D to display the atlas. Use the controls to search and filter tracks.
-    </canvas>
+    />
   )
 }

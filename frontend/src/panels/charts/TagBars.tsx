@@ -12,7 +12,7 @@ const CATEGORY_LABELS: Record<string, string> = { genre: 'genre', instrument: 'i
 /** Diverging bars: tags whose tracks score highest and lowest on this feature. */
 export default function TagBars({ feature }: { feature: FeatureNode }) {
   const bars = tagBars(feature.tag_profile)
-  if (bars.length === 0) return <p className="muted">No tag profile in this export.</p>
+  if (bars.length === 0) return null
   const half = (WIDTH - LABEL - COUNT_ROOM) / 2
   const centre = LABEL + half
   return (
@@ -46,11 +46,8 @@ export default function TagBars({ feature }: { feature: FeatureNode }) {
           )
         })}
         <line className="zero-line" x1={centre} x2={centre} y1={0} y2={bars.length * ROW} />
-        <text className="axis-label" x={centre} y={bars.length * ROW + 14} textAnchor="middle">average, in standard deviations</text>
+        <text className="axis-label" x={centre} y={bars.length * ROW + 14} textAnchor="middle">σ from average</text>
       </svg>
-      <figcaption>
-        Tags with at least 300 tracks. Blue: tracks with this tag score above average; red: below.
-      </figcaption>
     </figure>
   )
 }

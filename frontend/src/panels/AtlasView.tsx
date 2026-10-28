@@ -4,13 +4,15 @@ import AtlasMap from '../map/AtlasMap'
 import { fitView } from '../map/geometry'
 import { createAtlasStore } from '../state/store'
 import { useAtlasStore } from '../state/useAtlasStore'
-import AtlasControls from './AtlasControls'
+import AtlasSettings from './AtlasSettings'
+import AtlasToolbar from './AtlasToolbar'
+import Legend from './Legend'
 import TrackDetails from './TrackDetails'
 
 /** Mount this view with a static export directory, or use the bundled synthetic fixture. */
 export default function AtlasView({ baseUrl = './fixtures' }: { baseUrl?: string }) {
   const [store] = useState(createAtlasStore)
-  const { status, error } = useAtlasStore(store)
+  const { status, error, settingsOpen } = useAtlasStore(store)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -25,17 +27,17 @@ export default function AtlasView({ baseUrl = './fixtures' }: { baseUrl?: string
     return () => controller.abort()
   }, [baseUrl, store])
 
+  if (status === 'idle' || status === 'loading') return <p role="status">Loading…</p>
+  if (status === 'error') return <p role="alert">{error}</p>
   return (
-    <section aria-label="Music atlas" aria-busy={status === 'loading'}>
-      {status === 'idle' || status === 'loading' ? <p role="status">Loading atlas…</p> : null}
-      {status === 'error' ? <p role="alert">{error}</p> : null}
-      {status === 'ready' ? <>
-        <AtlasControls store={store} />
-        <div className="atlas-layout">
-          <AtlasMap store={store} />
-          <TrackDetails store={store} />
-        </div>
-      </> : null}
+    <section aria-label="Music atlas" className="atlas-layout">
+      <AtlasMap store={store} />
+      <aside className="side-panel">
+        <AtlasToolbar store={store} />
+        {settingsOpen ? <AtlasSettings store={store} /> : null}
+        <Legend store={store} />
+        <TrackDetails store={store} />
+      </aside>
     </section>
   )
 }

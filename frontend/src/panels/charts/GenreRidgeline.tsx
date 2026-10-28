@@ -52,7 +52,7 @@ export default function GenreRidgeline({ feature, quantiles, highlighted }: Prop
           {formatNumber(feature.histogram.edges[feature.histogram.edges.length - 1])}
         </text>
       </svg>
-      <figcaption>Each genre is scaled to its own tallest bin, so the shapes compare. Tick: median.</figcaption>
+      <figcaption>per-row scale · median</figcaption>
     </figure>
   )
 }

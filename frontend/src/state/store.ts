@@ -1,13 +1,27 @@
 import type { Atlas } from '../data/loader'
 import type { Track } from '../data/types'
-import { trackColours, trackTags, visibilityMask } from '../derive/tracks'
-import type { ColourMode, Filters } from '../derive/tracks'
+import { colourScheme, type ColourMode, type Legend } from '../derive/colouring'
+import { EMPTY_FILTERS, visibilityMask, visibleClusters, type Filters } from '../derive/filters'
+import { artistOptions, clusterOptions, featureKeys, tagOptions, type Option } from '../derive/options'
 
 export interface View {
   readonly x: number
   readonly y: number
   /** CSS pixels per map unit. */
   readonly scale: number
+}
+
+export interface Derived {
+  readonly mask: Uint8Array
+  readonly slots: Int8Array
+  readonly legend: Legend
+  readonly visibleCount: number
+  readonly visibleClusters: ReadonlySet<number>
+  readonly selectedTrack: Track | null
+  readonly tags: readonly string[]
+  readonly artists: readonly Option[]
+  readonly clusters: readonly Option[]
+  readonly features: readonly string[]
 }
 
 export interface AtlasState {
@@ -18,12 +32,36 @@ export interface AtlasState {
   readonly selection: string | null
   readonly filters: Filters
   readonly colourMode: ColourMode
-  readonly derived: {
-    readonly mask: Uint8Array
-    readonly colours: readonly string[]
-    readonly tags: readonly string[]
-    readonly visibleCount: number
-    readonly selectedTrack: Track | null
+  /** Feature used by the Feature colour mode; null until one is chosen. */
+  readonly colourFeature: string | null
+  readonly settingsOpen: boolean
+  readonly derived: Derived
+}
+
+const EMPTY_DERIVED: Derived = {
+  mask: new Uint8Array(),
+  slots: new Int8Array(),
+  legend: { kind: 'none' },
+  visibleCount: 0,
+  visibleClusters: new Set(),
+  selectedTrack: null,
+  tags: [],
+  artists: [],
+  clusters: [],
+  features: [],
+}
+
+function count(mask: Uint8Array): number {
+  return mask.reduce((sum, visible) => sum + visible, 0)
+}
+
+function copyFilters(filters: Filters): Filters {
+  return {
+    ...filters,
+    tags: [...filters.tags],
+    clusterIds: [...filters.clusterIds],
+    artists: [...filters.artists],
+    range: filters.range ? { ...filters.range } : null,
   }
 }
 
@@ -34,47 +72,95 @@ export function createAtlasStore() {
     error: null,
     view: { x: 0, y: 0, scale: 1 },
     selection: null,
-    filters: { text: '', tags: [] },
-    colourMode: 'cluster',
-    derived: { mask: new Uint8Array(), colours: [], tags: [], visibleCount: 0, selectedTrack: null },
+    filters: EMPTY_FILTERS,
+    colourMode: 'none',
+    colourFeature: null,
+    settingsOpen: false,
+    derived: EMPTY_DERIVED,
   }
   const listeners = new Set<() => void>()
+
   function publish(next: AtlasState): void {
     state = next
     listeners.forEach((listener) => listener())
   }
+
+  function scheme(atlas: Atlas | null, mode: ColourMode, feature: string | null, filters: Filters) {
+    if (!atlas) return { slots: EMPTY_DERIVED.slots, legend: EMPTY_DERIVED.legend }
+    return colourScheme({ tracks: atlas.tracks, clusters: atlas.clusters, mode, feature, artists: filters.artists })
+  }
+
   return {
     getSnapshot: () => state,
     subscribe(listener: () => void) {
       listeners.add(listener)
-      return () => { listeners.delete(listener) }
+      return () => {
+        listeners.delete(listener)
+      }
     },
     startLoading() {
-      publish({ ...state, atlas: null, status: 'loading', error: null, selection: null,
-        derived: { mask: new Uint8Array(), colours: [], tags: [], visibleCount: 0, selectedTrack: null } })
+      publish({ ...state, atlas: null, status: 'loading', error: null, selection: null, derived: EMPTY_DERIVED })
     },
     failLoading(error: string) {
       publish({ ...state, status: 'error', error })
     },
     setAtlas(atlas: Atlas) {
       const mask = visibilityMask(atlas.tracks, state.filters)
-      publish({ ...state, atlas, status: 'ready', error: null, selection: null,
+      const features = featureKeys(atlas.tracks)
+      const colourFeature = state.colourFeature && features.includes(state.colourFeature) ? state.colourFeature : (features[0] ?? null)
+      const { slots, legend } = scheme(atlas, state.colourMode, colourFeature, state.filters)
+      publish({
+        ...state,
+        atlas,
+        status: 'ready',
+        error: null,
+        selection: null,
+        colourFeature,
         derived: {
           mask,
-          colours: trackColours(atlas.tracks, state.colourMode),
-          tags: [...new Set(atlas.tracks.flatMap(trackTags))].sort(),
-          visibleCount: mask.reduce((sum, visible) => sum + visible, 0),
+          slots,
+          legend,
+          visibleCount: count(mask),
+          visibleClusters: visibleClusters(atlas.tracks, mask),
           selectedTrack: null,
-        } })
+          tags: tagOptions(atlas.tracks),
+          artists: artistOptions(atlas.tracks),
+          clusters: clusterOptions(atlas.clusters),
+          features,
+        },
+      })
     },
-    setFilters(filters: Filters) {
-      const mask = visibilityMask(state.atlas?.tracks ?? [], filters)
-      publish({ ...state, filters: { text: filters.text, tags: [...filters.tags] },
-        derived: { ...state.derived, mask, visibleCount: mask.reduce((sum, visible) => sum + visible, 0) } })
+    setFilters(input: Filters) {
+      const filters = copyFilters(input)
+      const tracks = state.atlas?.tracks ?? []
+      const mask = visibilityMask(tracks, filters)
+      // Artist colouring follows the chosen artists; other modes keep their slots.
+      const coloured =
+        state.colourMode === 'artist'
+          ? scheme(state.atlas, state.colourMode, state.colourFeature, filters)
+          : { slots: state.derived.slots, legend: state.derived.legend }
+      publish({
+        ...state,
+        filters,
+        derived: { ...state.derived, ...coloured, mask, visibleCount: count(mask), visibleClusters: visibleClusters(tracks, mask) },
+      })
     },
     setColourMode(colourMode: ColourMode) {
-      publish({ ...state, colourMode,
-        derived: { ...state.derived, colours: trackColours(state.atlas?.tracks ?? [], colourMode) } })
+      publish({
+        ...state,
+        colourMode,
+        derived: { ...state.derived, ...scheme(state.atlas, colourMode, state.colourFeature, state.filters) },
+      })
+    },
+    setColourFeature(colourFeature: string | null) {
+      const coloured =
+        state.colourMode === 'feature'
+          ? scheme(state.atlas, state.colourMode, colourFeature, state.filters)
+          : { slots: state.derived.slots, legend: state.derived.legend }
+      publish({ ...state, colourFeature, derived: { ...state.derived, ...coloured } })
+    },
+    setSettingsOpen(settingsOpen: boolean) {
+      publish({ ...state, settingsOpen })
     },
     setSelection(selection: string | null) {
       const selectedTrack = state.atlas?.tracks.find((track) => track.id === selection) ?? null

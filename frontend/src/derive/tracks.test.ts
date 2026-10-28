@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { atlasInput } from '../data/testFixtures'
-import { nearestPoint, NEUTRAL_COLOUR, searchMask, trackColours, visibilityMask } from './tracks'
+import { nearestPoint, searchMask, trackTags } from './tracks'
 
 describe('search', () => {
   test.each([
@@ -12,42 +12,9 @@ describe('search', () => {
   })
 })
 
-describe('visibility', () => {
-  test('combines search with all selected tags across categories', () => {
-    const tracks = atlasInput().tracks
-    expect([...visibilityMask(tracks, { text: 'ada', tags: ['ROCK', 'guitar', 'bright'] })]).toEqual([1, 0, 0])
-    expect([...visibilityMask(tracks, { text: 'ada', tags: ['piano'] })]).toEqual([0, 0, 0])
-    expect([...visibilityMask(tracks, { text: '', tags: ['rock', 'jazz'] })]).toEqual([0, 0, 0])
-  })
-
-  test('preserves order, identity and coordinates across filtering and clearing', () => {
-    const tracks = atlasInput().tracks
-    const before = structuredClone(tracks)
-    for (const track of tracks) Object.freeze(track)
-    Object.freeze(tracks)
-    visibilityMask(tracks, { text: 'sky', tags: ['jazz'] })
-    expect([...visibilityMask(tracks, { text: '', tags: [] })]).toEqual([1, 1, 1])
-    expect(tracks).toEqual(before)
-    expect(visibilityMask([], { text: '', tags: [] })).toHaveLength(0)
-  })
-})
-
-describe('colour', () => {
-  test('gives each cluster a stable colour independent of order and handles noise', () => {
-    const tracks = atlasInput().tracks
-    const colours = trackColours(tracks, 'cluster')
-    expect(colours[0]).not.toBe(colours[1])
-    expect(colours[2]).toBe(NEUTRAL_COLOUR)
-    expect(trackColours([...tracks].reverse(), 'cluster')).toEqual([...colours].reverse())
-    expect(trackColours([{ ...tracks[1], cluster_id: 1 }], 'cluster')[0]).toBe(colours[0])
-  })
-
-  test('uses the alphabetically first normalised tag, independently of category ordering', () => {
-    const track = atlasInput().tracks[0]
-    const first = { ...track, genres: ['ROCK', 'ambient'], instruments: ['Guitar'], moods: [] }
-    const second = { ...track, genres: ['guitar'], instruments: ['ambient', 'rock'], moods: [] }
-    expect(trackColours([first], 'tag')).toEqual(trackColours([second], 'tag'))
-    expect(trackColours([{ ...track, genres: [], instruments: [], moods: [] }], 'tag')).toEqual([NEUTRAL_COLOUR])
+describe('tags', () => {
+  test('lists genres, instruments and moods together', () => {
+    expect(trackTags(atlasInput().tracks[0])).toEqual(['rock', 'guitar', 'bright'])
   })
 })
 

@@ -54,17 +54,13 @@ export default function FeatureGraphView({ baseUrl = './atlas' }: { baseUrl?: st
   const current = result?.baseUrl === baseUrl ? result : null
   if (current?.error) return <p role="alert">{current.error}</p>
   const graph = current?.graph
-  if (!graph || !current) return <p role="status">Loading feature graph…</p>
+  if (!graph || !current) return <p role="status">Loading…</p>
 
   const selected = graph.features.find((feature) => feature.id === state.selected) ?? null
   return (
     <section aria-label="Feature graph" className="feature-view">
       <div>
-        <header className="legend">
-          <p className="muted">
-            {graph.features.length} features from {graph.track_count.toLocaleString('en-US')} tracks. Springs join features
-            with |r| ≥ {graph.min_abs_correlation}: drag a node and its correlated neighbours follow. Scroll to zoom.
-          </p>
+        <header>
           <div className="chips" role="group" aria-label="Feature families">
             {FEATURE_FAMILIES.map((family) => {
               const hidden = state.hiddenFamilies.has(family)

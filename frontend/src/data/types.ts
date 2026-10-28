@@ -28,6 +28,8 @@ export interface Track {
   id: string
   title: string
   artist: string
+  /** Schema 0.3 and later. */
+  artist_id?: string | null
   x: number
   y: number
   cluster_id: number | null

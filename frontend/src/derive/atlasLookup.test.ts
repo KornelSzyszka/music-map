@@ -36,3 +36,17 @@ describe('atlas lookup', () => {
     expect(neighboursOfTrack(lookup, 'nope', 5)).toEqual([])
   })
 })
+
+describe('neighbours and the visibility mask', () => {
+  const lookup = buildLookup(atlas)
+
+  it('skips neighbours that are filtered out and still fills the limit from the rest', () => {
+    const rows = neighboursOfTrack(lookup, 'a', 10, (id) => id !== 'b')
+    expect(rows.map((row) => row.track.id)).toEqual(['c'])
+    expect(neighboursOfTrack(lookup, 'a', 1, (id) => id !== 'b').map((row) => row.track.id)).toEqual(['c'])
+  })
+
+  it('gives nothing when every neighbour is hidden', () => {
+    expect(neighboursOfTrack(lookup, 'a', 10, () => false)).toEqual([])
+  })
+})

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { chooseAtlasSource, type AtlasSource } from './data/source'
 import AtlasView from './panels/AtlasView'
 import FeatureGraphView from './panels/FeatureGraphView'
+import { applyTheme, loadTheme, nextTheme, saveTheme, type ThemeChoice } from './state/theme'
 
 type Tab = 'map' | 'features'
 
@@ -10,9 +11,24 @@ const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'features', label: 'Features' },
 ]
 
+const THEME_LABELS: Record<ThemeChoice, string> = { system: 'Auto', light: 'Light', dark: 'Dark' }
+
+function storage(): Storage | null {
+  try {
+    return window.localStorage
+  } catch {
+    return null
+  }
+}
+
 export default function App() {
   const [tab, setTab] = useState<Tab>('map')
   const [source, setSource] = useState<AtlasSource | null>(null)
+  const [theme, setTheme] = useState<ThemeChoice>(() => loadTheme(storage()))
+
+  useEffect(() => {
+    applyTheme(theme, document.documentElement)
+  }, [theme])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -21,6 +37,12 @@ export default function App() {
     })
     return () => controller.abort()
   }, [])
+
+  function cycleTheme(): void {
+    const next = nextTheme(theme)
+    setTheme(next)
+    saveTheme(storage(), next)
+  }
 
   return (
     <main className="app">
@@ -33,19 +55,18 @@ export default function App() {
             </button>
           ))}
         </nav>
+        <button type="button" className="button" onClick={cycleTheme} aria-label={`Theme: ${THEME_LABELS[theme]}`}>
+          {THEME_LABELS[theme]}
+        </button>
       </header>
       {tab === 'map' ? (
         source ? (
           <>
-            {source.synthetic ? (
-              <p className="notice" role="note">
-                Showing the bundled synthetic demo. Build the real atlas with <code>npm run atlas</code> and restart.
-              </p>
-            ) : null}
+            {source.synthetic ? <p className="notice" role="note">Demo data</p> : null}
             <AtlasView baseUrl={source.baseUrl} />
           </>
         ) : (
-          <p role="status">Looking for the atlas…</p>
+          <p role="status">Loading…</p>
         )
       ) : (
         <FeatureGraphView baseUrl="./atlas" />
