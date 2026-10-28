@@ -1,0 +1,8 @@
+{
+  "schema_version": "0.1",
+  "dataset_version": "synthetic-2000-v1",
+  "projection_id": "synthetic-clouds-v1",
+  "feature_set_id": "synthetic-bpm-energy-v1",
+  "track_count": 2000,
+  "seed": 42
+}
