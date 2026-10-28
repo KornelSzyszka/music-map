@@ -32,6 +32,30 @@ npm run dev              # starts the app on http://localhost:5173
 
 `npm run dev` works without the data too: the Map tab uses a bundled synthetic atlas, and the Features tab stays empty until `npm run graph` has run.
 
+Environment: `scripts/build-atlas.ps1` (alias `music-atlas-build`) checks tools, creates `.env` and installs both sets of dependencies; `-Data` also fetches the data, `-Check` runs the gates afterwards. `music-atlas` starts the app.
+
+On Linux/macOS the same two steps are `scripts/build-atlas.sh [--data] [--check]` and `scripts/music-atlas.sh [--fetch|--data|--check|--docker|--no-open|--port N]`.
+
+### Shell aliases (optional)
+
+Both scripts resolve paths from their own location, so an alias works from any directory. Replace `<repo>` with the absolute path of your checkout. Arguments pass through, e.g. `music-atlas -NoOpen` or `music-atlas --port 5174`.
+
+PowerShell: add to your profile (`notepad $PROFILE`), then restart the shell or run `. $PROFILE`.
+
+```powershell
+function music-atlas { & '<repo>\scripts\music-atlas.ps1' @args }
+function music-atlas-build { & '<repo>\scripts\build-atlas.ps1' @args }
+```
+
+bash / zsh: add to `~/.bashrc` or `~/.zshrc`, then run `source` on it. Make the scripts executable first with `chmod +x scripts/*.sh`.
+
+```bash
+alias music-atlas='<repo>/scripts/music-atlas.sh'
+alias music-atlas-build='<repo>/scripts/build-atlas.sh'
+```
+
+Quote the path as shown; it may contain spaces or non-ASCII characters.
+
 Checks: `npm run check` runs the pipeline and frontend gates. On Windows with PowerShell, `scripts/music-atlas.ps1` wraps the same steps (`-Fetch`, `-Data`, `-Check`, `-Docker`).
 
 ## Source data
