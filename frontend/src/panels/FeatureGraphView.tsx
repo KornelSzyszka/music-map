@@ -1,14 +1,9 @@
 import { useEffect, useReducer, useState } from 'react'
-import {
-  FEATURE_FAMILIES,
-  loadFeatureGraph,
-  loadFeatureSample,
-  type FeatureGraph,
-} from '../data/featureGraph'
-import { FAMILY_LABELS } from '../derive/featureGraph'
+import { loadFeatureGraph, loadFeatureSample, type FeatureGraph } from '../data/featureGraph'
 import FeatureGraphMap from '../map/FeatureGraphMap'
 import { featureGraphReducer, initialFeatureGraphState } from '../state/featureGraphState'
 import type { SampleState } from './charts/CompareScatter'
+import FamilyLegend from './FamilyLegend'
 import FeatureDetail from './FeatureDetail'
 
 interface LoadResult {
@@ -60,29 +55,11 @@ export default function FeatureGraphView({ baseUrl = './atlas' }: { baseUrl?: st
   return (
     <section aria-label="Feature graph" className="feature-view">
       <div>
-        <header>
-          <div className="chips" role="group" aria-label="Feature families">
-            {FEATURE_FAMILIES.map((family) => {
-              const hidden = state.hiddenFamilies.has(family)
-              return (
-                <button
-                  key={family}
-                  type="button"
-                  className="chip"
-                  aria-pressed={!hidden}
-                  onClick={() => dispatch({ type: 'toggleFamily', family })}
-                >
-                  <span className={`swatch family-${family}`} aria-hidden="true" />
-                  {FAMILY_LABELS[family]}
-                </button>
-              )
-            })}
-            <button type="button" className="chip" onClick={() => setLayoutKey((key) => key + 1)}>
-              Re-layout
-            </button>
-          </div>
-        </header>
         <FeatureGraphMap key={layoutKey} graph={graph} state={state} dispatch={dispatch} />
+        <div className="graph-footer">
+          <FamilyLegend graph={graph} hidden={state.hiddenFamilies} onToggle={(family) => dispatch({ type: 'toggleFamily', family })} />
+          <button type="button" className="button" onClick={() => setLayoutKey((key) => key + 1)}>Re-layout</button>
+        </div>
       </div>
       <FeatureDetail graph={graph} feature={selected} state={state} dispatch={dispatch} sampleState={current.sample} />
     </section>

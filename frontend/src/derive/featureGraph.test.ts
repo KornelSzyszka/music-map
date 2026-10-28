@@ -4,7 +4,9 @@ import {
   axisPosition,
   boxRows,
   histogramBars,
+  MAX_RADIUS,
   maxPower,
+  MIN_RADIUS,
   neighboursOf,
   nodeRadius,
   toPixels,
@@ -17,10 +19,10 @@ describe('feature graph derivations', () => {
   it('scales node radius with the square root of the separation power', () => {
     const strongest = maxPower(graph)
     expect(strongest).toBe(0.4)
-    expect(nodeRadius(0, strongest)).toBe(5)
-    expect(nodeRadius(0.4, strongest)).toBe(18)
-    expect(nodeRadius(0.1, strongest)).toBeCloseTo(5 + 13 * 0.5)
-    expect(nodeRadius(0.3, 0)).toBe(5)
+    expect(nodeRadius(0, strongest)).toBe(MIN_RADIUS)
+    expect(nodeRadius(0.4, strongest)).toBe(MAX_RADIUS)
+    expect(nodeRadius(0.1, strongest)).toBeCloseTo((MIN_RADIUS + MAX_RADIUS) / 2)
+    expect(nodeRadius(0.3, 0)).toBe(MIN_RADIUS)
   })
 
   it('maps layout corners to the padded pixel box with y pointing down', () => {

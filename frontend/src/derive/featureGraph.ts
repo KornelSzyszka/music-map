@@ -9,8 +9,9 @@ export const FAMILY_LABELS: Record<FeatureFamily, string> = {
   tonal: 'Tonal',
 }
 
-const MIN_RADIUS = 5
-const RADIUS_RANGE = 13
+export const MIN_RADIUS = 3
+const RADIUS_RANGE = 6
+export const MAX_RADIUS = MIN_RADIUS + RADIUS_RANGE
 
 export interface Point {
   x: number

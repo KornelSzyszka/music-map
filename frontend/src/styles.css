@@ -253,3 +253,14 @@ circle.dot.series-1, circle.dot.series-2, circle.dot.series-3 { opacity: 0.85; }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto; transition: none; animation: none; }
 }
+
+/* Feature family legend */
+.graph-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.family-legend { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.family-legend ul { display: contents; list-style: none; margin: 0; padding: 0; }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0 2px; min-height: 28px; cursor: pointer; }
+.legend-item[aria-pressed='false'] { opacity: 0.4; }
+.legend-item:hover { text-decoration: underline; }
+.size-key { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.size-key svg { display: block; }
+.size-key circle { fill: var(--muted); }
