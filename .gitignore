@@ -34,3 +34,6 @@ pipeline/.pytest_cache/
 .idea/
 .vscode/
 .DS_Store
+
+# Local copy of the pipeline export used by the dev server
+frontend/public/atlas/

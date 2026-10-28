@@ -1,0 +1,18 @@
+{
+  "name": "music-atlas",
+  "private": true,
+  "description": "Convenience scripts for the repository root. The apps live in frontend/ and pipeline/.",
+  "scripts": {
+    "setup": "npm --prefix frontend install && cd pipeline && uv sync",
+    "data": "cd pipeline && uv run python scripts/fetch_data.py",
+    "data:check": "cd pipeline && uv run python scripts/fetch_data.py --check",
+    "graph": "cd pipeline && uv run python scripts/build_feature_graph.py ../data/derived",
+    "predev": "node scripts/sync-atlas.mjs",
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "typecheck": "npm --prefix frontend run typecheck",
+    "lint": "npm --prefix frontend run lint",
+    "test": "npm --prefix frontend run test",
+    "check": "cd pipeline && uv run pytest && uv run ruff check . && uv run ruff format --check . && cd ../frontend && npm run typecheck && npm run lint && npm run test && npm run build"
+  }
+}
