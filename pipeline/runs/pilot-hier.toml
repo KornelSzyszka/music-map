@@ -1,0 +1,37 @@
+# Same data and parameters as pilot.toml, but clusters are placed first and the
+# tracks of each cluster are arranged inside its disc (see ADR 0009).
+name = "pilot-hier"
+description = "10k Jamendo tracks, hierarchical layout: clusters first, then tracks"
+
+[dataset]
+name = "jamendo"
+
+[sample]
+size = 10000
+seed = 42
+stratify_by = "genres"
+
+[features]
+set = "acoustic-v1"
+
+[projection]
+pca_components = 40
+umap_neighbors = 15
+umap_min_dist = 0.1
+layout = "hierarchical"     # umap | hierarchical
+hierarchy_fill = 0.2        # share of the area spanned by the cluster centres that discs may cover
+
+[clusters]
+space_dims = 10
+space_neighbors = 15
+space_min_dist = 0.0
+min_cluster_size = 40
+min_samples = 5
+selection = "leaf"
+
+[neighbours]
+k = 15
+
+[quality]
+sample = 3000
+ks = [10, 30]

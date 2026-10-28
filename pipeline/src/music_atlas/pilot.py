@@ -27,6 +27,12 @@ from music_atlas.export import (
     write_tracks,
 )
 from music_atlas.features import FeatureSpec, build_matrix, standardize
+from music_atlas.hierarchy import (
+    HierarchyParams,
+    assign_to_clusters,
+    centroid_rank_agreement,
+    hierarchical_layout,
+)
 from music_atlas.project import (
     NOISE_LABEL,
     cluster_hdbscan,
@@ -35,7 +41,7 @@ from music_atlas.project import (
     reduce_pca,
 )
 
-SCHEMA_VERSION = "0.3"
+SCHEMA_VERSION = "0.4"
 DISTANCE_METRIC = "euclidean on clipped, standardised features"
 LIBRARIES = ("numpy", "pandas", "scikit-learn", "umap-learn")
 # Raw values exported with every track for the details panel.
@@ -59,9 +65,13 @@ class PilotParams:
     pca_components: int = 40
     umap_neighbors: int = 15
     umap_min_dist: float = 0.1
+    # "umap": the global map. "hierarchical": clusters first, then their tracks.
+    layout: str = "umap"
+    hierarchy_fill: float = 0.2
     cluster_dims: int = 10
     cluster_neighbors: int = 15
     cluster_min_dist: float = 0.0
+    assign_k: int = 15
     min_cluster_size: int = 40
     min_samples: int | None = 5
     cluster_selection: str = "leaf"
@@ -84,9 +94,9 @@ class AtlasBuild:
 
 
 def _quality(
-    Z: np.ndarray, Y: np.ndarray, params: PilotParams
+    Z: np.ndarray, maps: dict[str, np.ndarray], params: PilotParams
 ) -> dict[str, dict[str, dict[str, float]]]:
-    """Neighbourhood preservation of the map versus a plain 2-D PCA baseline.
+    """Neighbourhood preservation of each map versus a plain 2-D PCA baseline.
 
     Measured on a seeded subsample because trustworthiness needs all pairwise
     distances; both methods are scored on the same points.
@@ -99,7 +109,7 @@ def _quality(
     sub_z = Z[rows]
     nn_hi, _ = knn(sub_z, max(params.quality_ks))
     result: dict[str, dict[str, dict[str, float]]] = {}
-    for name, projection in (("umap", Y), ("pca", baseline)):
+    for name, projection in (*maps.items(), ("pca", baseline)):
         sub_y = projection[rows]
         nn_2d, _ = knn(sub_y, max(params.quality_ks))
         result[name] = {
@@ -131,7 +141,7 @@ def build_atlas(
     X = build_matrix(joined, spec)
     Z, _ = standardize(X)
     pca = reduce_pca(Z, min(params.pca_components, Z.shape[1]))
-    Y = project_umap(pca, params.umap_neighbors, params.umap_min_dist, params.seed)
+    umap = project_umap(pca, params.umap_neighbors, params.umap_min_dist, params.seed)
     # Clusters are found in a separate, higher-dimensional UMAP space: density in
     # the 40-D PCA space is too uniform for HDBSCAN (see docs/decisions/0007).
     cluster_space = project_umap(
@@ -148,7 +158,19 @@ def build_atlas(
         params.cluster_selection,
     )
     neighbor_index, neighbor_distance = knn(Z, params.knn_k)
-    quality = _quality(Z, Y, params)
+    # Every track gets a home cluster: its own, or the one it is closest to.
+    home = assign_to_clusters(Z, labels, params.assign_k)
+    maps = {"umap": umap}
+    if params.layout == "hierarchical":
+        hierarchy = HierarchyParams(
+            assign_k=params.assign_k, fill=params.hierarchy_fill, seed=params.seed
+        )
+        maps["hierarchical"] = hierarchical_layout(Z, labels, umap, hierarchy).positions
+    elif params.layout != "umap":
+        raise ValueError(f"unknown layout {params.layout!r}")
+    Y = maps.get("hierarchical", umap)
+    quality = _quality(Z, maps, params)
+    joined["home_cluster_id"] = home
 
     present = {
         key: path for key, path in DISPLAY_FEATURES.items() if path in spec.paths
@@ -180,6 +202,11 @@ def build_atlas(
             "dropped_without_features": dropped,
             "clusters": len(set(labels.tolist()) - {NOISE_LABEL}),
             "clustered_share": round(clustered / len(joined), 4),
+            "cluster_distance_rank_agreement": {
+                name: round(centroid_rank_agreement(Z, home, positions), 4)
+                for name, positions in maps.items()
+            },
+            "layout": params.layout,
         },
     }
     return AtlasBuild(

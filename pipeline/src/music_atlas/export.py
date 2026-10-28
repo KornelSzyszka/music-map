@@ -61,6 +61,13 @@ def _write_gzip_json(path: Path, payload: object) -> None:
         gz.write(body)
 
 
+def _optional_id(value: object) -> int | None:
+    """A cluster id from a table cell; missing or noise becomes None."""
+    if value is None or value == NOISE_LABEL:
+        return None
+    return int(value)  # type: ignore[call-overload]
+
+
 def _check_lengths(**lengths: int) -> None:
     if len(set(lengths.values())) != 1:
         raise ValueError(f"length mismatch: {lengths}")
@@ -86,6 +93,7 @@ def write_tracks(
             "x": round(float(x), COORDINATE_DECIMALS),
             "y": round(float(y), COORDINATE_DECIMALS),
             "cluster_id": None if label == NOISE_LABEL else int(label),
+            "home_cluster_id": _optional_id(getattr(row, "home_cluster_id", None)),
             "genres": list(row.genres),
             "instruments": list(row.instruments),
             "moods": list(row.moods),

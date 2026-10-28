@@ -22,6 +22,8 @@ _PARAMETER_KEYS: dict[str, dict[str, str]] = {
         "pca_components": "pca_components",
         "umap_neighbors": "umap_neighbors",
         "umap_min_dist": "umap_min_dist",
+        "layout": "layout",
+        "hierarchy_fill": "hierarchy_fill",
     },
     "clusters": {
         "space_dims": "cluster_dims",
@@ -98,6 +100,11 @@ def parse_run(document: dict) -> RunConfig:
             f"unknown feature set {feature_set!r}; known: {sorted(FEATURE_SETS)}"
         )
 
+    layout = document.get("projection", {}).get("layout", "umap")
+    if layout not in ("umap", "hierarchical"):
+        raise ValueError(
+            f"unsupported layout {layout!r}; supported: umap, hierarchical"
+        )
     values: dict[str, object] = {}
     for section, keys in _PARAMETER_KEYS.items():
         for key, field_name in keys.items():

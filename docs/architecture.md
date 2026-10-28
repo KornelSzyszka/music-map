@@ -60,7 +60,7 @@ Field names are the wire format. `schema_version` is bumped on any change. The c
 **Manifest**
 
 ```json
-{"schema_version": "0.3", "dataset_version": "jamendo-10000-seed42",
+{"schema_version": "0.4", "dataset_version": "jamendo-10000-seed42",
  "projection_id": "acoustic-v1-pca40-umap15-hdbscan40leaf", "feature_set_id": "acoustic-v1",
  "track_count": 10000, "seed": 42, "run": "pilot",
  "distance_metric": "euclidean on clipped, standardised features",
@@ -74,12 +74,12 @@ Field names are the wire format. `schema_version` is bumped on any change. The c
 
 ```json
 {"id": "jamendo:12345", "title": "Example Track", "artist": "Example Artist",
- "artist_id": "artist_375104", "x": -12.48, "y": 6.73, "cluster_id": 17,
+ "artist_id": "artist_375104", "x": -12.48, "y": 6.73, "cluster_id": 17, "home_cluster_id": 17,
  "genres": ["rock"], "instruments": ["guitar"], "moods": ["energetic"],
  "features": {"bpm": 114.0, "energy": 0.82}, "source_url": null}
 ```
 
-`cluster_id` is a single id, or `null` for noise. `artist_id` (schema 0.3 and later) is optional; without it the artist controls are not shown. Optional fields depend on the dataset.
+`cluster_id` is a single id, or `null` for noise. `artist_id` (schema 0.3 and later) is optional; without it the artist controls are not shown. `home_cluster_id` (schema 0.4 and later) is the track's own cluster or, for noise, the cluster it is closest to in feature space; the interface tints unclustered tracks with it. Optional fields depend on the dataset.
 
 **Cluster**
 

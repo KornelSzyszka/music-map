@@ -95,7 +95,7 @@ def test_quality_is_reported_for_the_map_and_the_baseline(tracks, features):
 
 def test_manifest_records_parameters_versions_and_metric(tracks, features):
     manifest = build_atlas(tracks, features, SPEC, PARAMS, "test-v1").manifest
-    assert manifest["schema_version"] == "0.3"
+    assert manifest["schema_version"] == "0.4"
     assert manifest["parameters"]["min_cluster_size"] == 10
     assert set(manifest["library_versions"]) == {
         "numpy",

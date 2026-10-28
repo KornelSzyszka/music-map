@@ -36,7 +36,7 @@ The Map has four colour modes. The default is **None**: every track has the same
 | Mode | Encoding | Rules |
 |---|---|---|
 | None (default) | one neutral colour | Selection and neighbours use the outline, not colour. |
-| Cluster | categorical | The 7 largest clusters get the first 7 series hues in a fixed order; all other clusters and unclustered tracks are grey. The legend lists the coloured clusters with their size. |
+| Cluster | categorical | The 7 largest clusters get the first 7 series hues in a fixed order; all other clusters and unclustered tracks are grey. Tracks without a cluster take a faint tint of the colour of their nearest coloured cluster. The legend lists the coloured clusters with their size. |
 | Feature | sequential, one hue light to dark | One acoustic feature. The domain is fixed for the whole data set (the clipped 0.5 to 99.5 percentile range), the legend shows the unit and the end values, missing values are grey. |
 | Artist | emphasis | The chosen artists (at most 3) in the first series hues with an outline, everything else grey. |
 
