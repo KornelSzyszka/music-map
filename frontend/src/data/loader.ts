@@ -60,7 +60,7 @@ export function strings(value: unknown, path: string): string[] {
   return array(value, path).map((item, index) => string(item, `${path}[${index}]`))
 }
 
-const SUPPORTED_SCHEMAS = ['0.1', '0.2', '0.3']
+const SUPPORTED_SCHEMAS = ['0.1', '0.2', '0.3', '0.4']
 
 function summary(value: unknown): AtlasSummary {
   const data = record(value, 'manifest.summary')
@@ -117,6 +117,9 @@ function track(value: unknown, index: number): Track {
     x: number(data.x, `${path}.x`),
     y: number(data.y, `${path}.y`),
     cluster_id: data.cluster_id === null ? null : integer(data.cluster_id, `${path}.cluster_id`),
+    ...(data.home_cluster_id === undefined || data.home_cluster_id === null
+      ? {}
+      : { home_cluster_id: integer(data.home_cluster_id, `${path}.home_cluster_id`) }),
     genres: strings(data.genres, `${path}.genres`),
     instruments: strings(data.instruments, `${path}.instruments`),
     moods: strings(data.moods, `${path}.moods`),

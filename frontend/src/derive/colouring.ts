@@ -5,6 +5,8 @@ export const GREY = -1
 export const BASE = -2
 export const SERIES_SLOTS = 7
 export const SEQUENTIAL_BASE = 10
+/** A faint version of a series colour, for tracks outside every cluster that lie closest to one. */
+export const HALO_BASE = 20
 export const SEQUENTIAL_STEPS = 9
 export const MAX_ARTIST_COLOURS = 3
 const DOMAIN_PERCENTILES = [0.005, 0.995] as const
@@ -61,7 +63,13 @@ export function colourScheme(input: ColourInput): ColourScheme {
     const chosen = coloredClusters(clusters)
     const slotOf = new Map(chosen.map((cluster, index) => [cluster.id, index]))
     tracks.forEach((track, index) => {
-      slots[index] = track.cluster_id === null ? GREY : (slotOf.get(track.cluster_id) ?? GREY)
+      if (track.cluster_id !== null) {
+        slots[index] = slotOf.get(track.cluster_id) ?? GREY
+        return
+      }
+      // Unclustered: a faint tint of the nearest cluster, when that cluster has a colour.
+      const home = track.home_cluster_id == null ? undefined : slotOf.get(track.home_cluster_id)
+      slots[index] = home === undefined ? GREY : HALO_BASE + home
     })
     return {
       slots,

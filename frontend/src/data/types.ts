@@ -33,6 +33,8 @@ export interface Track {
   x: number
   y: number
   cluster_id: number | null
+  /** Schema 0.4 and later: the cluster the track belongs to or is closest to. */
+  home_cluster_id?: number | null
   genres: string[]
   instruments: string[]
   moods: string[]

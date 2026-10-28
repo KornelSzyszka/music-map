@@ -15,7 +15,7 @@ export function atlasInput(): {
         genres: ['rock'], instruments: ['guitar'], moods: ['bright'], features: { energy: 0.8 }, source_url: null },
       { id: 'test:2', title: 'Evening', artist: 'Sky Trio', artist_id: 'artist:trio', x: 4, y: 3, cluster_id: 2,
         genres: ['jazz'], instruments: ['piano'], moods: ['calm'], features: {}, source_url: 'https://example.org/track' },
-      { id: 'test:3', title: 'Silence', artist: 'Ada', artist_id: 'artist:ada', x: 10, y: 10, cluster_id: null,
+      { id: 'test:3', title: 'Silence', artist: 'Ada', artist_id: 'artist:ada', x: 10, y: 10, cluster_id: null, home_cluster_id: 1,
         genres: [], instruments: [], moods: [], features: {}, source_url: null },
     ],
     clusters: [

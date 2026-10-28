@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { buildLookup, neighboursOfTrack } from '../derive/atlasLookup'
 import { DEFAULT_LABEL_OPTIONS, layoutLabels } from '../derive/clusterLabels'
-import { BASE, GREY, MAX_ARTIST_COLOURS, SEQUENTIAL_BASE, SEQUENTIAL_STEPS, SERIES_SLOTS } from '../derive/colouring'
+import { BASE, GREY, HALO_BASE, MAX_ARTIST_COLOURS, SEQUENTIAL_BASE, SEQUENTIAL_STEPS, SERIES_SLOTS } from '../derive/colouring'
 import { nearestPoint } from '../derive/tracks'
 import type { AtlasStore } from '../state/store'
 import { useAtlasStore } from '../state/useAtlasStore'
@@ -13,7 +13,7 @@ const KEY_STEP = 1.2
 const PICK_RADIUS = 10
 const NEIGHBOURS_SHOWN = 10
 const LABEL_FONT = '600 12px system-ui, sans-serif'
-const ALPHA = { grey: 0.35, base: 0.75, colour: 0.9 }
+const ALPHA = { grey: 0.35, halo: 0.45, base: 0.75, colour: 0.9 }
 
 interface Drag {
   startX: number
@@ -39,6 +39,7 @@ function slotColours(styles: CSSStyleDeclaration): (slot: number) => string {
   return (slot) => {
     if (slot === GREY) return grey
     if (slot === BASE) return base
+    if (slot >= HALO_BASE) return series[slot - HALO_BASE]
     return slot >= SEQUENTIAL_BASE ? sequential[slot - SEQUENTIAL_BASE] : series[slot]
   }
 }
@@ -84,15 +85,16 @@ export default function AtlasMap({ store }: { store: AtlasStore }) {
     context.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT)
     const radius = Math.min(6, 2.2 + Math.log2(Math.max(1, view.scale / fitScale)))
 
-    // Grey tracks first and faint, so that colour and the neutral base read on top of them.
-    for (const pass of ['grey', 'rest'] as const) {
+    // Grey first, then the faint tints, then full colour, so that colour reads on top.
+    const passOf = (slot: number): 'grey' | 'halo' | 'rest' => (slot === GREY ? 'grey' : slot >= HALO_BASE ? 'halo' : 'rest')
+    for (const pass of ['grey', 'halo', 'rest'] as const) {
       atlas.tracks.forEach((track, index) => {
         if (!derived.mask[index]) return
         const slot = derived.slots[index]
-        if ((slot === GREY) !== (pass === 'grey')) return
+        if (passOf(slot) !== pass) return
         const point = toCanvas(track, view)
         if (point.x < -8 || point.x > MAP_WIDTH + 8 || point.y < -8 || point.y > MAP_HEIGHT + 8) return
-        context.globalAlpha = slot === GREY ? ALPHA.grey : slot === BASE ? ALPHA.base : ALPHA.colour
+        context.globalAlpha = pass === 'grey' ? ALPHA.grey : pass === 'halo' ? ALPHA.halo : slot === BASE ? ALPHA.base : ALPHA.colour
         context.beginPath()
         context.arc(point.x, point.y, radius, 0, 2 * Math.PI)
         context.fillStyle = colourOf(slot)

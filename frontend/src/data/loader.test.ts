@@ -126,3 +126,11 @@ test('preserves cancellation', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => { throw controller.signal.reason }))
   await expect(loadAtlas('/atlas', controller.signal)).rejects.toBe(controller.signal.reason)
 })
+
+test('accepts schema 0.4 with the home cluster of a track', () => {
+  const input = atlasInput()
+  input.manifest = { ...input.manifest, schema_version: '0.4' }
+  const atlas = validateAtlas(input)
+  expect(atlas.tracks[2].home_cluster_id).toBe(1)
+  expect(atlas.tracks[0].home_cluster_id).toBeUndefined()
+})

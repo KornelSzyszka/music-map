@@ -6,6 +6,7 @@ import {
   colourScheme,
   featureDomain,
   GREY,
+  HALO_BASE,
   MAX_ARTIST_COLOURS,
   SEQUENTIAL_BASE,
   SEQUENTIAL_STEPS,
@@ -87,5 +88,29 @@ describe('feature domain', () => {
     const domain = featureDomain(tracks, 'x')
     expect(domain?.max).toBeLessThan(400)
     expect(featureDomain(tracks, 'missing')).toBeNull()
+  })
+})
+
+describe('unclustered tracks', () => {
+  test('take a faint tint of the nearest coloured cluster', () => {
+    const clusters = [cluster(1, 50), cluster(2, 40)]
+    const tracks = [
+      track(1, { cluster_id: 1 }),
+      track(2, { cluster_id: null, home_cluster_id: 2 }),
+      track(3, { cluster_id: null, home_cluster_id: 1 }),
+    ]
+    const { slots } = colourScheme({ ...base(tracks, clusters), mode: 'cluster' })
+    expect([...slots]).toEqual([0, HALO_BASE + 1, HALO_BASE])
+  })
+
+  test('stay grey when they have no home or the home cluster has no colour', () => {
+    const clusters = Array.from({ length: 9 }, (_, i) => cluster(i + 1, 100 - i))
+    const tracks = [track(1, { cluster_id: null }), track(2, { cluster_id: null, home_cluster_id: 9 }), track(3, { cluster_id: null, home_cluster_id: 99 })]
+    expect([...colourScheme({ ...base(tracks, clusters), mode: 'cluster' }).slots]).toEqual([GREY, GREY, GREY])
+  })
+
+  test('are not tinted by the other colour modes', () => {
+    const tracks = [track(1, { cluster_id: null, home_cluster_id: 1 })]
+    expect([...colourScheme({ ...base(tracks, [cluster(1, 5)]), mode: 'none' }).slots]).toEqual([BASE])
   })
 })
