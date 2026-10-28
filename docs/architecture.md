@@ -84,6 +84,34 @@ Field names are the wire format. `schema_version` is bumped on any change. The c
 
 `distance` is measured in the standardised feature space, not on the map. The metric name and feature-set version are recorded in the export metadata.
 
+**Feature graph** (`features.json.gz`, optional; drives the Features tab)
+
+```json
+{"feature_set_id": "acoustic-v1", "genre_quantiles": [10, 25, 50, 75, 90],
+ "min_abs_correlation": 0.7, "track_count": 55607,
+ "features": [{"id": "rhythm.bpm", "label": "bpm", "family": "rhythm", "x": 0.31, "y": -0.8,
+   "power": 0.04, "stats": {"min": 59.8, "p25": 103.8, "median": 120.1, "p75": 139.4,
+   "max": 191.4, "mean": 121.0, "std": 25.1, "skew": 0.29},
+   "histogram": {"edges": [73.9, 76.5], "counts": [12], "below": 279, "above": 279},
+   "genre_profile": {"rock": [90.1, 105.0, 120.2, 135.1, 150.3]},
+   "genre_histogram": {"rock": [0.01, 0.03]},
+   "tag_profile": [{"tag": "trance", "category": "genre", "mean_z": 0.441, "n": 1528}]}],
+ "edges": [{"source": "rhythm.bpm", "target": "rhythm.bpm_histogram_first_peak_bpm.mean", "r": 0.98}]}
+```
+
+Nodes are features. `x`, `y` come from MDS of `1 - |r|` (then spread so nodes do not overlap), so tags never influence the layout. `power` is the share of the feature's variance explained by single-genre labels (eta squared, 0 to 1). `genre_profile` holds the quantiles listed in `genre_quantiles` of the raw feature value per genre. `genre_histogram` is the share of each genre's tracks per bin of `histogram` (same edges). `tag_profile` lists the tags with the highest and lowest mean standardised value of the feature (tags with at least 300 tracks; `mean_z` is in standard deviations).
+
+**Feature sample** (`feature_sample.json.gz`, optional; drives the Compare tab)
+
+```json
+{"feature_set_id": "acoustic-v1", "features": ["rhythm.bpm", "tonal.key_strength"],
+ "genres": ["rock", null], "values": [[120.1, 0.71], [98.4, 0.55]]}
+```
+
+A seeded random sample of 2500 tracks with raw feature values (4 significant digits) in the order of `features`; `genres` is the track's first genre among the 12 most frequent single-genre labels, or null.
+
+Written by `pipeline/scripts/build_feature_graph.py`; mirrored by `frontend/src/data/featureGraph.ts`.
+
 ## Open questions
 
 - Which acoustic features the chosen dataset actually provides (decides the feature set).

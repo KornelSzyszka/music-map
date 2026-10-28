@@ -4,7 +4,7 @@ Read [docs/code-style.md](docs/code-style.md) and [docs/patterns.md](docs/patter
 
 ## Setup
 
-Requirements: Python 3.12, `uv`, Node 24 with npm. Copy `.env.example` to `.env` and set `MUSIC_MAP_DATA_DIR`; export it in your shell, because the pipeline reads the environment, not the file.
+Requirements: Python 3.12, `uv`, Node 24 with npm. Copy `.env.example` to `.env` and set `MUSIC_MAP_DATA_DIR`. The pipeline reads the environment variable first and falls back to `.env`. `npm run setup` installs everything; `npm run data` downloads the source data (see the README).
 
 ## Checks
 

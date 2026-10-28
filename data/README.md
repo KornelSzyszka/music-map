@@ -1,7 +1,5 @@
 # Local data
 
-- `raw/`: downloaded source metadata and features.
-- `processed/`: cleaned and intermediate tabular data.
-- `derived/`: static atlas export consumed by the frontend.
+`derived/` holds the static atlas export consumed by the frontend (`features.json.gz`, `feature_sample.json.gz`, later `manifest.json`, `tracks.json.gz`, ...). It is git-ignored and produced by the pipeline.
 
-The contents of these directories are git-ignored. The pipeline locates source data through the `MUSIC_MAP_DATA_DIR` environment variable (see `.env.example`).
+The source datasets are not stored here. They live in the directory named by `MUSIC_MAP_DATA_DIR` (see the README, "Source data").

@@ -36,7 +36,7 @@ Copy the template, fill every field, keep it short. Link the code that implement
 ### Environment configuration, fail fast
 - **Status:** present
 - **Context:** code needs the location of source data, which differs per machine.
-- **Rule:** read configuration from environment variables in one module (`config.py`). A missing required variable raises an error that names the variable. No machine-specific default paths in code.
+- **Rule:** read configuration in one module (`config.py`): an environment variable first, the repository's `.env` as fallback. A missing required variable raises an error that names the variable. No machine-specific default paths in code.
 - **Why:** portable, no surprises on another machine. Rejected: hard-coded default drive path.
 - **Where:** `pipeline/src/music_atlas/config.py`, `.env.example`.
 
@@ -80,3 +80,10 @@ Copy the template, fill every field, keep it short. Link the code that implement
 - **Context:** a skeleton fixes structure before behaviour is known.
 - **Rule:** stubs raise `NotImplementedError` and carry a `TODO` naming the missing decision. A stub is deleted, not left behind, once implemented.
 - **Where:** `pipeline/src/music_atlas/*.py`.
+
+### Untrusted archives are read in memory
+- **Status:** present
+- **Context:** the pipeline reads downloaded tar archives.
+- **Rule:** iterate members and parse them in memory; accept only regular files with the expected extension; never extract to disk and never execute content.
+- **Why:** downloaded files are untrusted input (path traversal, links). Rejected: `extractall`.
+- **Where:** `pipeline/src/music_atlas/features.py` (`_iter_documents`).

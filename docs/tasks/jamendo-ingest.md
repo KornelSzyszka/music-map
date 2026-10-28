@@ -1,6 +1,6 @@
-# Task brief: M2 Jamendo ingest
+# Task brief: Jamendo ingest
 
-- Task ID: M2
+- Task ID: jamendo-ingest
 - Status: proposed
 - Goal and user-visible outcome: `ingest` turns the Jamendo metadata into a validated, reproducibly sampled tracks table.
 - Owning role: implementer

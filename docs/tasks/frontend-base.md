@@ -1,6 +1,6 @@
-# Task brief: M3 frontend base
+# Task brief: frontend base
 
-- Task ID: M3
+- Task ID: frontend-base
 - Status: proposed
 - Goal and user-visible outcome: the frontend loads an atlas, validates it against the contract, and exposes filtered and coloured data through state and pure derive functions, shown as plain points on a canvas.
 - Owning role: implementer
@@ -15,7 +15,7 @@
 - `src/state/`: one store for view, selection, filters (tags, text), colour mode.
 - `src/derive/`: pure functions for visibility mask (never mutates tracks), search over title/artist, colour by cluster or tag, nearest point to a coordinate.
 - A synthetic fixture atlas (about 2 000 points) in the contract format lives in `frontend/public/fixtures/` and is generated or checked by a test.
-- Rendering in this task is a minimal Canvas 2D view; the final renderer is decided by the M4 spike.
+- Rendering in this task is a minimal Canvas 2D view; the final renderer is decided by the render spike.
 
 ## Write scope
 

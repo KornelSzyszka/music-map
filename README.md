@@ -18,21 +18,35 @@ Course project for *Visualization of Large Datasets* (Wrocław University of Sci
 
 ## Quick start
 
-Requirements: Python 3.12, [uv](https://docs.astral.sh/uv/), Node 24 with npm.
+Requirements: Python 3.12, [uv](https://docs.astral.sh/uv/), Node 24 with npm, git.
+
+Run everything from the repository root. The apps live in `pipeline/` and `frontend/`; the root `package.json` only forwards to them.
 
 ```bash
-# pipeline
-cd pipeline
-uv sync
-uv run pytest
-
-# frontend
-cd frontend
-npm install
-npm run dev
+cp .env.example .env     # then set MUSIC_MAP_DATA_DIR (see "Source data" below)
+npm run setup            # installs frontend and pipeline dependencies
+npm run data             # downloads the source data (about 1.4 GB, once)
+npm run graph            # builds the feature export from it (about 2 minutes)
+npm run dev              # starts the app on http://localhost:5173
 ```
 
-Copy `.env.example` to `.env` and set `MUSIC_MAP_DATA_DIR` to the directory holding the source dataset. The pipeline reads the variable from the environment; the `.env` file is not loaded automatically.
+`npm run dev` works without the data too: the Map tab uses a bundled synthetic atlas, and the Features tab stays empty until `npm run graph` has run.
+
+Checks: `npm run check` runs the pipeline and frontend gates. On Windows with PowerShell, `scripts/music-atlas.ps1` wraps the same steps (`-Fetch`, `-Data`, `-Check`, `-Docker`).
+
+## Source data
+
+All source data lives in one directory that you choose; it is never inside the repository. Put its path in `.env` as `MUSIC_MAP_DATA_DIR`. The pipeline reads that variable from the environment, or from `.env` when the variable is not set.
+
+`npm run data` (`pipeline/scripts/fetch_data.py`) fills the directory:
+
+```text
+<MUSIC_MAP_DATA_DIR>/
+  mtg-jamendo-dataset/                  git clone of github.com/MTG/mtg-jamendo-dataset (metadata, ~270 MB)
+  mtg-jamendo/acousticbrainz/           100 feature archives, ~1.3 GB, SHA-256 verified
+```
+
+That is all the project uses: track metadata and tags from the repository, and the Essentia feature JSON files from the archives. No audio and no spectrograms. `npm run data:check` reports what is present without downloading.
 
 ## Documentation
 
@@ -40,7 +54,7 @@ Copy `.env.example` to `.env` and set `MUSIC_MAP_DATA_DIR` to the directory hold
 - [docs/code-style.md](docs/code-style.md): how code is written and checked
 - [docs/patterns.md](docs/patterns.md): recurring design solutions
 - [docs/state.md](docs/state.md) and [docs/roadmap.md](docs/roadmap.md): where the project stands and the staged plan
-- [docs/datasets.md](docs/datasets.md): verified dataset facts
+- [docs/datasets.md](docs/datasets.md): what data is used, where it comes from, verified facts
 - [docs/decisions/](docs/decisions/) and [docs/tasks/](docs/tasks/): decisions and task briefs
 - [docs/agents/](docs/agents/): how Claude, Codex and the user work together
 - [CONTRIBUTING.md](CONTRIBUTING.md): workflow and checks

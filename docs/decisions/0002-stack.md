@@ -14,7 +14,7 @@ Pipeline: Python 3.12 + uv, pandas, NumPy, PyArrow, scikit-learn (PCA, MDS, t-SN
 
 ## Alternatives and rationale
 
-Server-side or in-browser projection rejected (harder to reproduce). Python pinned to 3.12 until numba support for newer versions is verified. Render library final choice depends on the M4 spike (deck.gl vs Canvas 2D + d3-zoom).
+Server-side or in-browser projection rejected (harder to reproduce). Python pinned to 3.12 until numba support for newer versions is verified. Render library final choice depends on the render spike (deck.gl vs Canvas 2D + d3-zoom).
 
 ## Participants and acceptance evidence
 

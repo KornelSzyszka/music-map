@@ -1,7 +1,7 @@
-# Task brief: M1 core projection
+# Task brief: projection core
 
-- Task ID: M1
-- Status: proposed
+- Task ID: projection-core
+- Status: implemented, awaiting independent review
 - Goal and user-visible outcome: the stages `project`, `evaluate` and `export` work on any feature matrix and produce the atlas files of the data contract, proven on synthetic data.
 - Owning role: technical-lead / implementer
 - Responsible agent: Claude (substantial technical work)
@@ -35,4 +35,10 @@ UMAP/HDBSCAN default parameters are routine (recorded in the manifest). A contra
 
 ## Completion
 
-To be filled when done.
+Implemented 2026-10-27 by Claude (author; no independent review yet).
+
+- Changed: `pipeline/src/music_atlas/{project,evaluate,export}.py`, new tests `pipeline/tests/{conftest,test_project,test_evaluate,test_export}.py`.
+- Contract adjustments: `write_neighbors` takes `ids`; `MethodSpec` is a frozen dataclass; added `write_clusters`. `out` is an output directory (files `manifest.json`, `tracks.json.gz`, `clusters.json.gz`, `neighbors.json.gz`).
+- Verified: 27 tests pass, `ruff check` and `ruff format --check` clean, both locally and in the Docker image.
+- Limits: tested on synthetic data only; the manifest does not yet record projection parameters; MDS and t-SNE are only exercised through `compare_methods` for PCA and UMAP.
+- Local note: a broken permission on the machine's pytest temp directory made `tmp_path` fail; run `pytest --basetemp=.pytest_tmp` on this machine or use Docker.
