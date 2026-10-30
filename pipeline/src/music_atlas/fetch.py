@@ -8,7 +8,9 @@ when their SHA-256 matches.
 import hashlib
 import os
 import re
+import shutil
 import subprocess
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -26,7 +28,8 @@ from music_atlas.datasets import (
 )
 
 CHUNK_BYTES = 1 << 20
-DOWNLOAD_ATTEMPTS = 3
+URLLIB_ATTEMPTS = 3
+URLLIB_RETRY_DELAY_SECONDS = 5
 TIMEOUT_SECONDS = 60
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 _ARCHIVE_NAME = re.compile(r"[A-Za-z0-9_.-]+\.tar\.gz")
@@ -84,10 +87,14 @@ def archive_state(path: Path, expected: str) -> str:
     return "ok" if sha256_file(path) == expected else "corrupt"
 
 
-def download_archive(url: str, destination: Path, expected: str) -> None:
-    """Download to a temporary file and move it into place only if the hash matches."""
-    partial = destination.with_name(destination.name + ".part")
+
+def _download_archive_urllib(
+    url: str, destination: Path, expected: str
+) -> None:
+    """Try one urllib download; discard its partial file on failure."""
+    partial = destination.with_name(destination.name + ".urllib.part")
     digest = hashlib.sha256()
+
     try:
         with (
             urllib.request.urlopen(url, timeout=TIMEOUT_SECONDS) as response,
@@ -96,11 +103,78 @@ def download_archive(url: str, destination: Path, expected: str) -> None:
             while chunk := response.read(CHUNK_BYTES):
                 digest.update(chunk)
                 out.write(chunk)
+
         if digest.hexdigest() != expected:
             raise ValueError(f"checksum mismatch for {destination.name}")
+
         os.replace(partial, destination)
     finally:
         partial.unlink(missing_ok=True)
+
+
+def _download_archive_curl(
+    url: str, destination: Path, expected: str
+) -> None:
+    """Fallback downloader using curl, with retries and resume support."""
+    partial = destination.with_name(destination.name + ".part")
+
+    curl = shutil.which("curl")
+    if curl is None:
+        raise RuntimeError("curl is required for the fallback but was not found")
+
+    command = [
+        curl,
+        "--fail",
+        "--location",
+        "--silent",
+        "--show-error",
+        "--retry", "5",
+        "--retry-all-errors",
+        "--retry-delay", "5",
+        "--connect-timeout", "30",
+        "--max-time", "0",
+        "--continue-at", "-",
+        "--output", str(partial),
+        url,
+    ]
+
+    subprocess.run(command, check=True)
+
+    actual = sha256_file(partial)
+    if actual != expected:
+        partial.unlink(missing_ok=True)
+        raise ValueError(
+            f"checksum mismatch for {destination.name}: "
+            f"expected {expected}, got {actual}"
+        )
+
+    os.replace(partial, destination)
+
+
+def download_archive(
+    url: str,
+    destination: Path,
+    expected: str,
+    log: Log = print,
+) -> None:
+    """Try urllib several times, then fall back to curl."""
+    for attempt in range(1, URLLIB_ATTEMPTS + 1):
+        try:
+            _download_archive_urllib(url, destination, expected)
+        except (urllib.error.URLError, OSError, ValueError) as error:
+            log(f"  urllib attempt {attempt}/{URLLIB_ATTEMPTS} failed: {error}")
+
+            if attempt < URLLIB_ATTEMPTS:
+                delay = URLLIB_RETRY_DELAY_SECONDS * (2 ** (attempt - 1))
+                log(f"  retrying urllib in {delay} seconds")
+                time.sleep(delay)
+        else:
+            log("  downloaded successfully using urllib")
+            return
+
+    log("  urllib failed; switching to curl")
+    _download_archive_curl(url, destination, expected)
+    log("  downloaded successfully using curl")
 
 
 def ensure_metadata_repo(data_dir: Path, log: Log = print) -> None:
@@ -164,14 +238,22 @@ def fetch_archives(
             continue
         directory.mkdir(parents=True, exist_ok=True)
         log(f"[{index}/{len(checksums)}] {name} ({state}), downloading")
-        for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
-            try:
-                download_archive(f"{base_url}/{name}", directory / name, expected)
-            except (urllib.error.URLError, OSError, ValueError) as error:
-                log(f"  attempt {attempt} failed: {error}")
-            else:
-                report.downloaded.append(name)
-                break
-        else:
+        try:
+            download_archive(
+                f"{base_url}/{name}",
+                directory / name,
+                expected,
+                log=log,
+            )
+        except (
+            urllib.error.URLError,
+            OSError,
+            ValueError,
+            RuntimeError,
+            subprocess.SubprocessError,
+        ) as error:
+            log(f"  download failed: {error}")
             report.failed.append(name)
+        else:
+            report.downloaded.append(name)
     return report
