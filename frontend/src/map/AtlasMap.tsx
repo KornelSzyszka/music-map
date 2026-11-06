@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react'
 import { buildLookup, neighboursOfTrack } from '../derive/atlasLookup'
 import { DEFAULT_LABEL_OPTIONS, layoutLabels } from '../derive/clusterLabels'
-import { BASE, GREY, HALO_BASE, MAX_ARTIST_COLOURS, SEQUENTIAL_BASE, SEQUENTIAL_STEPS, SERIES_SLOTS } from '../derive/colouring'
+import { GREY, HALO_BASE, MAX_ARTIST_COLOURS } from '../derive/colouring'
 import { nearestPoint } from '../derive/tracks'
 import type { AtlasStore } from '../state/store'
 import { useAtlasStore } from '../state/useAtlasStore'
 import { fitView, fromCanvas, MAP_HEIGHT, MAP_WIDTH, panBy, toCanvas, zoomAt } from './geometry'
+import { colourForSlot } from './colourPalette'
 
 const CLICK_DISTANCE = 4
 const WHEEL_STEP = 1.15
@@ -13,7 +14,7 @@ const KEY_STEP = 1.2
 const PICK_RADIUS = 10
 const NEIGHBOURS_SHOWN = 10
 const LABEL_FONT = '600 12px system-ui, sans-serif'
-const ALPHA = { grey: 0.35, halo: 0.45, base: 0.75, colour: 0.9 }
+const UNCLUSTERED_ALPHA = 0.4
 
 interface Drag {
   startX: number
@@ -27,21 +28,6 @@ interface Drag {
 function canvasPoint(canvas: HTMLCanvasElement, clientX: number, clientY: number): { x: number; y: number } {
   const bounds = canvas.getBoundingClientRect()
   return { x: ((clientX - bounds.left) * MAP_WIDTH) / bounds.width, y: ((clientY - bounds.top) * MAP_HEIGHT) / bounds.height }
-}
-
-/** Resolve a colour slot to the current theme's value (tokens live in CSS, see docs/design.md). */
-function slotColours(styles: CSSStyleDeclaration): (slot: number) => string {
-  const read = (name: string): string => styles.getPropertyValue(name).trim()
-  const series = Array.from({ length: SERIES_SLOTS }, (_, index) => read(`--series-${index + 1}`))
-  const sequential = Array.from({ length: SEQUENTIAL_STEPS }, (_, index) => read(`--seq-${index + 1}`))
-  const grey = read('--grey')
-  const base = read('--base')
-  return (slot) => {
-    if (slot === GREY) return grey
-    if (slot === BASE) return base
-    if (slot >= HALO_BASE) return series[slot - HALO_BASE]
-    return slot >= SEQUENTIAL_BASE ? sequential[slot - SEQUENTIAL_BASE] : series[slot]
-  }
 }
 
 /** Changes whenever the theme does (explicit override or system preference), so that the canvas repaints. */
@@ -81,7 +67,6 @@ export default function AtlasMap({ store }: { store: AtlasStore }) {
     const styles = getComputedStyle(canvas)
     const ink = styles.getPropertyValue('--text').trim() || '#111111'
     const halo = styles.getPropertyValue('--surface').trim() || '#ffffff'
-    const colourOf = slotColours(styles)
     context.clearRect(0, 0, MAP_WIDTH, MAP_HEIGHT)
     const radius = Math.min(6, 2.2 + Math.log2(Math.max(1, view.scale / fitScale)))
 
@@ -94,10 +79,10 @@ export default function AtlasMap({ store }: { store: AtlasStore }) {
         if (passOf(slot) !== pass) return
         const point = toCanvas(track, view)
         if (point.x < -8 || point.x > MAP_WIDTH + 8 || point.y < -8 || point.y > MAP_HEIGHT + 8) return
-        context.globalAlpha = pass === 'grey' ? ALPHA.grey : pass === 'halo' ? ALPHA.halo : slot === BASE ? ALPHA.base : ALPHA.colour
+        context.globalAlpha = pass === 'halo' ? UNCLUSTERED_ALPHA : 1
         context.beginPath()
         context.arc(point.x, point.y, radius, 0, 2 * Math.PI)
-        context.fillStyle = colourOf(slot)
+        context.fillStyle = colourForSlot(slot, styles)
         context.fill()
         // Colour never works alone: highlighted artists also get an outline.
         if (colourMode === 'artist' && slot >= 0 && slot < MAX_ARTIST_COLOURS) {

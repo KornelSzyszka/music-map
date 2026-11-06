@@ -262,14 +262,6 @@ input::placeholder { color: var(--muted); }
 .scale { height: 10px; border-radius: 3px; border: 1px solid var(--rim); }
 .scale-ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 2px; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
-.slot-1 { background: var(--series-1); }
-.slot-2 { background: var(--series-2); }
-.slot-3 { background: var(--series-3); }
-.slot-4 { background: var(--series-4); }
-.slot-5 { background: var(--series-5); }
-.slot-6 { background: var(--series-6); }
-.slot-7 { background: var(--series-7); }
-
 .track-details, .feature-detail {
   padding: 14px 16px;
   min-width: 0;

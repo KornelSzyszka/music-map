@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import type { Cluster, Track } from '../data/types'
 import {
   BASE,
+  CLUSTER_BASE,
   coloredClusters,
   colourScheme,
   featureDomain,
@@ -10,7 +11,6 @@ import {
   MAX_ARTIST_COLOURS,
   SEQUENTIAL_BASE,
   SEQUENTIAL_STEPS,
-  SERIES_SLOTS,
   type ColourInput,
 } from './colouring'
 
@@ -31,22 +31,24 @@ describe('colour modes', () => {
     expect(legend).toEqual({ kind: 'none' })
   })
 
-  test('Cluster colours only the largest clusters, in a fixed order, and greys the rest', () => {
+  test('Cluster assigns a stable colour slot to every cluster', () => {
     const clusters = Array.from({ length: 10 }, (_, i) => cluster(i + 1, 100 - i))
     const tracks = [track(1, { cluster_id: 1 }), track(2, { cluster_id: 7 }), track(3, { cluster_id: 8 }), track(4, { cluster_id: null })]
     const { slots, legend } = colourScheme({ ...base(tracks, clusters), mode: 'cluster' })
-    expect([...slots]).toEqual([0, 6, GREY, GREY])
-    expect(legend.kind === 'categories' && legend.entries).toHaveLength(SERIES_SLOTS)
-    expect(coloredClusters(clusters).map((c) => c.id)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect([...slots]).toEqual([CLUSTER_BASE, CLUSTER_BASE + 6, CLUSTER_BASE + 7, GREY])
+    expect(legend.kind === 'categories' && legend.entries).toHaveLength(clusters.length)
+    expect(coloredClusters(clusters).map((c) => c.id)).toEqual(clusters.map((c) => c.id))
   })
 
-  test('cluster colours do not depend on track order, filters or ties in size', () => {
+  test('cluster colour slots do not depend on track or cluster input order', () => {
     const clusters = [cluster(5, 10), cluster(3, 10), cluster(9, 50)]
     expect(coloredClusters(clusters).map((c) => c.id)).toEqual([9, 3, 5])
     const tracks = [track(1, { cluster_id: 9 }), track(2, { cluster_id: 3 })]
     const forward = colourScheme({ ...base(tracks, clusters), mode: 'cluster' }).slots
     const reverse = colourScheme({ ...base([...tracks].reverse(), clusters), mode: 'cluster' }).slots
     expect([...forward]).toEqual([...reverse].reverse())
+    const reorderedClusters = colourScheme({ ...base(tracks, [...clusters].reverse()), mode: 'cluster' }).slots
+    expect([...forward]).toEqual([...reorderedClusters])
   })
 
   test('Feature maps values to sequential steps over the whole data set and greys missing values', () => {
@@ -100,13 +102,13 @@ describe('unclustered tracks', () => {
       track(3, { cluster_id: null, home_cluster_id: 1 }),
     ]
     const { slots } = colourScheme({ ...base(tracks, clusters), mode: 'cluster' })
-    expect([...slots]).toEqual([0, HALO_BASE + 1, HALO_BASE])
+    expect([...slots]).toEqual([CLUSTER_BASE, HALO_BASE + 1, HALO_BASE])
   })
 
-  test('stay grey when they have no home or the home cluster has no colour', () => {
+  test('stay grey when they have no home or an unknown home cluster', () => {
     const clusters = Array.from({ length: 9 }, (_, i) => cluster(i + 1, 100 - i))
     const tracks = [track(1, { cluster_id: null }), track(2, { cluster_id: null, home_cluster_id: 9 }), track(3, { cluster_id: null, home_cluster_id: 99 })]
-    expect([...colourScheme({ ...base(tracks, clusters), mode: 'cluster' }).slots]).toEqual([GREY, GREY, GREY])
+    expect([...colourScheme({ ...base(tracks, clusters), mode: 'cluster' }).slots]).toEqual([GREY, HALO_BASE + 8, GREY])
   })
 
   test('are not tinted by the other colour modes', () => {

@@ -38,11 +38,14 @@ The Map has four colour modes. The default is **None**: every track has the same
 | Mode | Encoding | Rules |
 |---|---|---|
 | None (default) | one neutral colour | Selection and neighbours use the outline, not colour. |
-| Cluster | categorical | The 7 largest clusters get the first 7 series hues in a fixed order; all other clusters and unclustered tracks are grey. Tracks without a cluster take a faint tint of the colour of their nearest coloured cluster. The legend lists the coloured clusters with their size. |
+| Cluster | categorical | Every cluster gets a stable colour slot in a fixed order: the first 7 use the series hues and further clusters use deterministic hues. Tracks without a cluster use the same hue as their nearest cluster. Panning, zooming and filtering do not change a cluster's colour. The legend lists every cluster with its size. |
 | Feature | sequential, one hue light to dark | One acoustic feature. The domain is fixed for the whole data set (the clipped 0.5 to 99.5 percentile range), the legend shows the end values, missing values are grey. |
 | Artist | emphasis | The chosen artists (at most 3) in the first series hues with an outline, everything else grey. |
 
-- Categorical colours: at most 8 hues, fixed order, never cycled; one entity keeps one colour in every theme and filter state. No hashing of ids into colours.
+- Cluster colours are assigned from the complete atlas, not the visible viewport. Existing series hues are used first, then a deterministic hue sequence; a slot always resolves to a colour.
+- Canvas rendering resolves theme tokens to concrete CSS colors before drawing; unresolved `var(...)` values are not passed to the canvas.
+- Clustered points stay fully opaque; points without a definitive cluster are drawn at reduced opacity to distinguish them from cluster members.
+- Artist emphasis uses at most 3 series hues. No hashing of ids into colours.
 - Genres (95) are never coloured; they are a filter. A genre grouping needs an explicit dictionary and a rule for tracks with several genres before it can become a mode.
 - Sequential scales use one hue, not a rainbow. Signed values use a blue to red pair with a neutral middle.
 - Grey means "not in focus": unclustered, missing or not highlighted. It is always the same grey.

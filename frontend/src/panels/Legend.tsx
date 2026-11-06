@@ -1,4 +1,5 @@
 import { SEQUENTIAL_STEPS } from '../derive/colouring'
+import { colourForSlot } from '../map/colourPalette'
 import { featureLabel } from '../derive/options'
 import type { AtlasStore } from '../state/store'
 import { useAtlasStore } from '../state/useAtlasStore'
@@ -28,7 +29,7 @@ export default function Legend({ store }: { store: AtlasStore }) {
       <ul>
         {legend.entries.map((entry) => (
           <li key={`${entry.slot}:${entry.label}`}>
-            <span className={`swatch slot-${entry.slot + 1}`} aria-hidden="true" />
+            <span className="swatch" style={{ backgroundColor: colourForSlot(entry.slot) }} aria-hidden="true" />
             <span className="legend-label">{entry.label}</span>
             <span className="legend-count">{entry.count.toLocaleString('en-US')}</span>
           </li>

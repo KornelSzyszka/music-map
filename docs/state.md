@@ -1,6 +1,6 @@
 # Current state
 
-Updated: 2026-10-27
+Updated: 2026-11-06
 
 ## Phase
 
@@ -17,6 +17,7 @@ Skeleton with verified tooling; projection core reviewed by Codex (5 findings, 4
 - Map tab (pilot atlas): 10 000 tracks, 41 clusters covering 39% of them ([cluster-space decision](decisions/0007-cluster-space.md)), UMAP trustworthiness 0.86 vs 0.82 for a 2-D PCA baseline at k=10. Zoom, pan, click, search, cluster labels and a nearest-neighbour panel work in headless Edge (light and dark), no console errors. Load time to first paint about 2.5 s.
 
 - Map interface ([interface-direction decision](decisions/0008-interface-direction-and-artist-level.md), `docs/design.md`): Settings panel with colour modes (None, Cluster, Feature, Artist) and a legend, filters by tags (all or any), cluster, artist (highlight or hide others) and a feature range, a neutral dark and light theme with a switch, and no instructional text. Checked in headless Edge in both themes. Artist selection needs `artist_id` in the export (schema 0.3).
+- Cluster colours now resolve for every cluster through stable slots and a deterministic extended palette; panning, zooming and filtering preserve assignments. Canvas theme tokens are resolved to concrete values before drawing, preventing stale fill colors. Unclustered points with a nearest-cluster tint use reduced opacity to distinguish them from cluster members.
 
 - Hierarchical layout ([hierarchical-layout decision](decisions/0009-hierarchical-layout.md), proposed): `pipeline/runs/pilot-hier.toml` places clusters by feature-space distance (Spearman 0.93 vs 0.77) and arranges tracks inside; continuity drops from 0.93 to 0.88. The global UMAP stays the default; the app switches between both layouts in Settings (the default run exports both, schema 0.5). Unclustered tracks are tinted with their nearest cluster in the Cluster colour mode.
 

@@ -14,7 +14,7 @@ export interface View {
 
 export interface Derived {
   readonly mask: Uint8Array
-  readonly slots: Int8Array
+  readonly slots: Int32Array
   readonly legend: Legend
   readonly visibleCount: number
   readonly visibleClusters: ReadonlySet<number>
@@ -43,7 +43,7 @@ export interface AtlasState {
 
 const EMPTY_DERIVED: Derived = {
   mask: new Uint8Array(),
-  slots: new Int8Array(),
+  slots: new Int32Array(),
   legend: { kind: 'none' },
   visibleCount: 0,
   visibleClusters: new Set(),
