@@ -121,7 +121,7 @@ Field names are the wire format. `schema_version` is bumped on any change. The c
 ```json
 {
   "id": 17,
-  "label": "Psychedelic / Rock",
+  "label": "Psychedelic",
   "size": 325,
   "x": -10.1,
   "y": 8.4,
@@ -130,6 +130,12 @@ Field names are the wire format. `schema_version` is bumped on any change. The c
   "top_tags": ["rock", "guitar"]
 }
 ```
+
+Cluster labels are unique within an atlas. Genre candidates are considered in
+descending within-cluster share, so a shared genre goes to its strongest cluster
+and other clusters take their next-best available genre. Instrument and mood tags
+fill any remaining labels, with a unique `Cluster <id>` fallback. `top_tags`
+remains a per-cluster list ranked by lift.
 
 **Neighbors**
 

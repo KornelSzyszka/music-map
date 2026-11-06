@@ -24,9 +24,10 @@ NMI is between cluster and first genre of the clustered tracks; it is a sanity c
 | UMAP 10-D | eom, min size 30-60 | 2 | 99% | 0.00 |
 | UMAP 10-D | leaf, min size 30, default samples | 27 | 32% | 0.22 |
 | **UMAP 10-D** | **leaf, min size 40, min_samples 5** | **41** | **39%** | **0.22** |
+| UMAP 10-D | leaf, min size 20, min_samples 5 | 93 | 39.1% | - |
 | UMAP 10-D | leaf, min size 15, min_samples 5 | 121 | 41% | 0.28 |
 
-Chosen for a readable map: about 40 clusters of median size 87 (largest 241), distinct enough to label.
+Chosen for a readable map: about 40 clusters of median size 87 (largest 241), distinct enough to label. The size-20 run produced 93 clusters, including several small clusters with repeated top tags (four `classical`, three `romantic`); the user chose fewer, broader clusters over this finer split.
 
 ## Alternatives and rationale
 
@@ -42,4 +43,4 @@ Claude proposed and measured it. The user has not reviewed the numbers.
 
 - Only 39% of tracks belong to a cluster; the rest are drawn grey as "no dense group". This is an honest property of the data, not a bug.
 - The extra UMAP costs about 20 seconds per run.
-- Cluster labels are the tags with the highest lift in the cluster, so they describe what is distinctive.
+- Cluster `top_tags` are the tags with the highest lift. Display labels are unique: genre candidates are considered by within-cluster share, and clusters with a contested first choice take their next-best available genre; instrument and mood tags fill any remaining labels.

@@ -14,7 +14,7 @@ Skeleton with verified tooling; projection core reviewed by Codex (5 findings, 4
 
 - Features tab: `pipeline/scripts/build_feature_graph.py` exports `features.json.gz` and `feature_sample.json.gz`. The frontend shows a spring graph of 96 features (drag, zoom, family filter) and, per feature, five views: distribution, genre ridgeline, quartiles, tag bars and a scatter against another feature. Checked in headless Edge in light and dark mode: settling, drag pulls neighbours, tabs, zoom, no console errors.
 
-- Map tab (pilot atlas): 10 000 tracks, 41 clusters covering 39% of them ([cluster-space decision](decisions/0007-cluster-space.md)), UMAP trustworthiness 0.86 vs 0.82 for a 2-D PCA baseline at k=10. Zoom, pan, click, search, cluster labels and a nearest-neighbour panel work in headless Edge (light and dark), no console errors. Load time to first paint about 2.5 s.
+- Map tab (pilot atlas): source config uses a 40-track minimum cluster size and assigns unique labels, giving a shared genre to its strongest cluster by within-cluster share; other clusters take their next available genre. The last generated atlas is stale (93 clusters from the size-20 run) and needs rebuilding. The size-40 baseline previously produced 41 clusters covering 39% of tracks ([cluster-space decision](decisions/0007-cluster-space.md)). UMAP trustworthiness was 0.86 vs 0.82 for a 2-D PCA baseline at k=10.
 
 - Map interface ([interface-direction decision](decisions/0008-interface-direction-and-artist-level.md), `docs/design.md`): Settings panel with colour modes (None, Cluster, Feature, Artist) and a legend, filters by tags (all or any), cluster, artist (highlight or hide others) and a feature range, a neutral dark and light theme with a switch, and no instructional text. Checked in headless Edge in both themes. Artist selection needs `artist_id` in the export (schema 0.3).
 - Cluster colours now resolve for every cluster through stable slots and a deterministic extended palette; panning, zooming and filtering preserve assignments. Canvas theme tokens are resolved to concrete values before drawing, preventing stale fill colors. Unclustered points with a nearest-cluster tint use reduced opacity to distinguish them from cluster members.
@@ -33,7 +33,7 @@ Skeleton with verified tooling; projection core reviewed by Codex (5 findings, 4
 
 ## Next action
 
-Independent review of `fidelity.py`, `artist_effect.py` and `analysis_export.py` (Codex reviewing Claude's brief, or the user's choice), then the frontend brief for the views of sets 1 and 2 (`docs/tasks/`, needs the user's go to launch).
+Rebuild the pilot atlas with the restored size-40 cluster setting to replace the stale size-20 atlas; then independently review `fidelity.py`, `artist_effect.py` and `analysis_export.py` (Codex reviewing Claude's brief, or the user's choice).
 
 ## Handoff
 

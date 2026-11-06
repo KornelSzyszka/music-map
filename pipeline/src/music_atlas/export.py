@@ -21,7 +21,6 @@ FEATURE_SAMPLE_FILE = "feature_sample.json.gz"
 
 COORDINATE_DECIMALS = 4
 TOP_TAG_COUNT = 3
-LABEL_TAG_COUNT = 2
 TAG_COLUMNS = ("genres", "instruments", "moods")
 # A cluster tag must cover this share of the cluster (and at least MIN_TAG_MEMBERS).
 MIN_TAG_SHARE = 0.08
@@ -150,6 +149,29 @@ def _describing_tags(
     return [tag for _, _, tag in scored[:TOP_TAG_COUNT]]
 
 
+def _assign_distinct_labels(
+    cluster_counts: dict[int, Counter],
+    cluster_sizes: dict[int, int],
+    candidates: set[str],
+    assigned: dict[int, str],
+) -> None:
+    """Assign strongest tag-share candidates without reusing a label."""
+    used = set(assigned.values())
+    matches = [
+        (count / cluster_sizes[cluster_id], count, cluster_id, tag)
+        for cluster_id, counts in cluster_counts.items()
+        if cluster_id not in assigned
+        for tag in candidates - used
+        if (count := counts[tag])
+        >= max(MIN_TAG_MEMBERS, MIN_TAG_SHARE * cluster_sizes[cluster_id])
+    ]
+    matches.sort(key=lambda match: (-match[0], -match[1], match[2], match[3]))
+    for _, _, cluster_id, tag in matches:
+        if cluster_id not in assigned and tag not in used:
+            assigned[cluster_id] = tag
+            used.add(tag)
+
+
 def _alt_centroid(alt: np.ndarray | None, members: np.ndarray) -> dict[str, float]:
     if alt is None:
         return {}
@@ -169,18 +191,42 @@ def write_clusters(
 ) -> None:
     """Write one record per cluster (noise excluded) with centroid and top tags.
 
-    Tags are ranked by lift, so a label names what is distinctive about the
-    cluster instead of the tags that are common everywhere.
+    Display labels prefer unique genres by within-cluster share. ``top_tags``
+    separately ranks the most distinctive tags by lift.
     """
     _check_lengths(tracks=len(df), positions=len(Y), labels=len(labels))
     overall = _tag_counts(df)
+    cluster_ids = sorted(set(labels.tolist()) - {NOISE_LABEL})
+    cluster_members = {
+        cluster_id: np.flatnonzero(labels == cluster_id) for cluster_id in cluster_ids
+    }
+    cluster_counts = {
+        cluster_id: _tag_counts(df, members)
+        for cluster_id, members in cluster_members.items()
+    }
+    cluster_sizes = {
+        cluster_id: len(members) for cluster_id, members in cluster_members.items()
+    }
+    genre_tags = {tag for tags in df["genres"] for tag in tags}
+    assigned_labels: dict[int, str] = {}
+    _assign_distinct_labels(cluster_counts, cluster_sizes, genre_tags, assigned_labels)
+    all_tags = set(overall)
+    _assign_distinct_labels(cluster_counts, cluster_sizes, all_tags, assigned_labels)
+    used_labels = set(assigned_labels.values())
     clusters = []
-    for cluster_id in sorted(set(labels.tolist()) - {NOISE_LABEL}):
-        members = np.flatnonzero(labels == cluster_id)
+    for cluster_id in cluster_ids:
+        members = cluster_members[cluster_id]
         top_tags = _describing_tags(
-            _tag_counts(df, members), len(members), overall, len(df)
+            cluster_counts[cluster_id], len(members), overall, len(df)
         )
-        label = " / ".join(top_tags[:LABEL_TAG_COUNT]) or f"Cluster {cluster_id}"
+        label = assigned_labels.get(cluster_id)
+        if label is None:
+            label = f"Cluster {cluster_id}"
+            suffix = 2
+            while label in used_labels:
+                label = f"Cluster {cluster_id} ({suffix})"
+                suffix += 1
+            used_labels.add(label)
         centroid = Y[members].mean(axis=0)
         clusters.append(
             {

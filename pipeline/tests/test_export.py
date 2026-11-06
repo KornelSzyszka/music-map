@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from music_atlas.export import (
@@ -73,7 +74,58 @@ def test_clusters_exclude_noise_and_report_sizes(exported):
     assert [c["id"] for c in clusters] == [0, 1, 2]
     assert clusters[0]["size"] == int((labels == 0).sum())
     assert clusters[0]["top_tags"][0] in {"rock", "guitar"}
+    assert {cluster["label"] for cluster in clusters} == {"rock", "jazz", "ambient"}
+    assert all("/" not in cluster["label"] for cluster in clusters)
     assert {"rock", "jazz", "ambient"} & set(clusters[1]["top_tags"])
+
+
+def test_distinct_labels_go_to_clusters_with_the_strongest_genre_match(tmp_path):
+    rows = []
+    cluster_labels = []
+    for cluster_id, genres in enumerate(
+        [
+            ["rap"] * 18 + ["rock"] * 2,
+            ["rap"] * 16 + ["ambient"] * 4,
+            ["rap"] * 14 + ["hiphop"] * 6,
+        ]
+    ):
+        for track_id, genre in enumerate(genres):
+            rows.append(
+                {
+                    "id": f"test:{cluster_id}:{track_id}",
+                    "genres": [genre],
+                    "instruments": [],
+                    "moods": [],
+                }
+            )
+            cluster_labels.append(cluster_id)
+    tracks = pd.DataFrame(rows)
+    labels = np.asarray(cluster_labels)
+
+    write_clusters(tmp_path, tracks, np.zeros((len(tracks), 2)), labels)
+
+    clusters = read_gzip_json(tmp_path / CLUSTERS_FILE)
+    assert {cluster["id"]: cluster["label"] for cluster in clusters} == {
+        0: "rap",
+        1: "ambient",
+        2: "hiphop",
+    }
+    assert len({cluster["label"] for cluster in clusters}) == len(clusters)
+
+
+def test_clusters_without_tags_still_get_unique_labels(tmp_path):
+    tracks = pd.DataFrame(
+        [
+            {"genres": [], "instruments": [], "moods": []},
+            {"genres": [], "instruments": [], "moods": []},
+        ]
+    )
+    labels = np.array([0, 1])
+
+    write_clusters(tmp_path, tracks, np.zeros((2, 2)), labels)
+
+    clusters = read_gzip_json(tmp_path / CLUSTERS_FILE)
+    assert [cluster["label"] for cluster in clusters] == ["Cluster 0", "Cluster 1"]
 
 
 def test_neighbors_reference_existing_tracks(exported, tracks):
